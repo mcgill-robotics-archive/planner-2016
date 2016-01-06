@@ -1,0 +1,5 @@
+<launch>
+    <node name="planner" pkg="planner" type="static_state_machine" output="screen">
+        <rosparam file="$(find planner)/config/square.yaml" />
+    </node>
+</launch>
