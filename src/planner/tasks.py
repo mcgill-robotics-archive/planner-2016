@@ -5,12 +5,12 @@ from smach_ros import SimpleActionState
 
 
 
-#class Initialize(SimpleActionState):
-    #def _init_(countdown,offset,time_left):
+
         
     
 
-#class Move(SimpleActionState):
+#condition callback for idle since it is a condition state
+#TODO: setup to condition on a topic instead
 
 def idle_cond_cb(ud):
     check = raw_input()
@@ -20,7 +20,8 @@ def idle_cond_cb(ud):
         return False
     
 
-
+#callbacks for move, parameter reading will be moved out of the goal callback for an easier time
+#(only the first and last 3 lines of that callback will remain)
 def move_goal_cb(userdata,goal):
     uid=userdata.move_id
     
@@ -31,7 +32,7 @@ def move_goal_cb(userdata,goal):
     move_goal = userdata.movelist[uid]
     userdata.move_id += 1
     return move_goal
-
+#TODO: make this callback less limited and allow more arbitrary IDs
 def move_result_cb(userdata,status,goal):
     if status == GoalStatus.SUCCEEDED:
         if userdata.move_id==rospy.getparams('~numberofmoves'):
