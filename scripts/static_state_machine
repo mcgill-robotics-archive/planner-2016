@@ -4,8 +4,12 @@ import smach
 import smach_ros
 import rospy
 from threading import Thread
-#from planner import tasks
+from planner import *
+import initialize_server,move_server
 from smach_ros import SimpleActionState
+from actionlib import *
+from actionlib_msgs.msg import *
+from planner.msg import initializeAction,moveAction
 
 
 
@@ -41,6 +45,8 @@ def move_result_cb(userdata,status,goal):
         if userdata.move_id==4:
             userdata.move_id = 0
             return 'done'
+        else:
+            return 'notdone'
 
 def create_machine():
     static_sm = smach.StateMachine(
@@ -56,17 +62,17 @@ def create_machine():
                                             'false':'Idle'})
         smach.StateMachine.add('Initialize',
                                SimpleActionState('initaction',
-                                               InitializeAction,
+                                               initializeAction,
                                                goal=countdown),
                                transitions={'succeeded':'Move',
                                             'preempted':'Idle'})
         smach.StateMachine.add('Move',
                                SimpleActionState('squareaction',
-                                               MoveAction,
-                                               goal=tasks.move_goal_cb,
-                                               result=tasks.move_result_cb),
-                               transitions={'succeeded':'Move',
-                                            'preempted':'Idle',
+                                               moveAction,
+                                               goal_cb=move_goal_cb,
+                                               result_cb=move_result_cb,
+                                               outcomes=['done','notdone']),
+                               transitions={'notdone':'Move',
                                             'done':'Idle'})
                                
                                                
@@ -101,8 +107,8 @@ def create_machine():
 if __name__ == '__main__':
     rospy.init_node('square_state_machine')
     sm = create_machine()
-    server1 = initialize_server('initaction')
-    server2 = move_server('squareaction')
+    server1 = initialize_server.InitializeAction('initaction')
+    server2 = move_server.MoveAction('squareaction')
     sis = smach_ros.IntrospectionServer('square_state_machine', sm, '/SM_ROOT')
     sis.start()
 
