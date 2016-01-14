@@ -9,7 +9,7 @@ import initialize_server,move_server
 from smach_ros import SimpleActionState
 from actionlib import *
 from actionlib_msgs.msg import *
-from planner.msg import initializeAction,moveAction
+from planner.msg import initializeAction, initializeGoal, initializeResult, initializeFeedback, moveAction, moveGoal, moveFeedback, moveResult
 
 
 
@@ -58,15 +58,62 @@ def move_result_cb(userdata,status,goal):
         else:
             return 'notdone'
 
+
+import random
+
+class InitializeServer(object):
+    _feedback = initializeFeedback()
+    _result = initializeResult()
+    
+
+
+    def __init__(self, name):
+        rospy.loginfo(self.execute_cb)
+        
+        self._as = SimpleActionServer(name, initializeAction, execute_cb=self.execute_cb, auto_start=False)
+        
+        
+        self._as.start()
+
+    def execute_cb(self,goal):
+        rospy.loginfo('starting')
+        t = goal
+        seconds = t.to_sec() #floating point
+        nanoseconds = t.to_nsec()
+
+        for s in range(t,1.0,-1.0):
+             if self._as.is_preempt_requested():
+                rospy.loginfo('%s: Preempted' % self._action_name)
+                self._as.set_preempted()
+                success = False
+                break
+             rand = random.randint(0,1)
+            
+                
+             self._feedback.time_left = rospy.Time.from_sec(s)
+             self._as.publish_feedback(self._feedback)
+             if rand == 0:
+                 self._result.offset = Pose(Point(10,10,10),Quaternion(20,20,20,20))
+                 rospy.loginfo('%s: Succeeded' % self._action_name)
+                 self._as.set_succeeded(self._result)
+                 break
+             rospy.Rate(1).sleep()
+
+
+        rospy.loginfo('%s: Preempted' % self._action_name)
+        self._as.set_preempted()
+
+
 def create_machine():
     static_sm = smach.StateMachine(
         outcomes=['succeeded','aborted','preempted'])
     
     with static_sm:
         #countdown = rospy.get_param('countdown')
-        countdown = rospy.Time(10)
+        countdown1 = rospy.Time(10,0)
         static_sm.userdata.uid = 0 
         static_sm.userdata.moves = [10,0,1,1,1,1,1,1,30,10]
+        
         
         smach.StateMachine.add('Idle',
                                Idle(),
@@ -74,7 +121,7 @@ def create_machine():
         smach.StateMachine.add('Initialize',
                                SimpleActionState('initaction',
                                                initializeAction,
-                                               goal=countdown),
+                                               goal=initializeGoal(countdown=countdown1)),
                                transitions={'succeeded':'Move',
                                             'preempted':'Idle'})
         smach.StateMachine.add('Move',
@@ -117,20 +164,21 @@ def create_machine():
 
 
 if __name__ == '__main__':
-    rospy.init_node('square_state_machine')
-    sm = create_machine()
-    server1 = initialize_server.InitializeAction('initaction')
+    rospy.init_node('square_state_machine', log_level=rospy.WARN)
+    server1 = InitializeServer('initaction')
     server2 = move_server.MoveAction('squareaction')
+    sm = create_machine()
+ 
     #sis = smach_ros.IntrospectionServer('square_state_machine', sm, '/SM_ROOT')
     #sis.start()
 
     #taken from the threading method used in auv-2015 to avoid problems
-    smach_thread = Thread(target=lambda: sm.execute())
-    smach_thread.start()
+    #smach_thread = Thread(target=lambda: sm.execute())
+    #smach_thread.start()
 
     #taken from auv-2015 to avoid the ctrl+c issue
     rospy.on_shutdown(sm.request_preempt)
     rospy.spin()
-    smach_thread.join()
+    #smach_thread.join()
     #sis.stop()
     

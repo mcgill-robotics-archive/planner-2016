@@ -1,23 +1,25 @@
-#! /usr/bin/env python
+
 
 import rospy
 import actionlib
-import planner.msg
+from planner.msg import *
 import random
 
-class InitializeAction(object):
-    _feedback = planner.msg.initializeFeedback()
-    _result = planner.msg.initializeResult()
-
+class InitializeServer(object):
+    
+    
 
 
     def __init__(self, name):
-        self._action_name = name
-        self._as = actionlib.SimpleActionServer(self._action_name, planner.msg.initializeAction, execute_cb=self.execute_cb, auto_start = False)
+        rospy.loginfo('initializeAction')
+        
+        self._as = actionlib.SimpleActionServer(name, initializeAction, execute_cb=self.execute_cb, auto_start=False)
+        
+        
         self._as.start()
 
     def execute_cb(self,msg):
-        
+        rospy.loginfo('starting')
         t = msg.goal
         seconds = t.to_sec() #floating point
         nanoseconds = t.to_nsec()
@@ -43,8 +45,11 @@ class InitializeAction(object):
 
         rospy.loginfo('%s: Preempted' % self._action_name)
         self._as.set_preempted()
-                
-                
+
+##if __name__ == 'main':
+##    rospy.init_node('initaction')
+##    InitializeAction(rospy.get_name())
+##    rospy.spin()
  
         
 
