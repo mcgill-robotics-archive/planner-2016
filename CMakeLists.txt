@@ -4,10 +4,10 @@ project(planner)
 ## Find catkin macros and libraries
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
 ## is used, also find other catkin packages
-find_package(catkin REQUIRED)
+find_package(catkin REQUIRED rospy  genmsg std_msgs geometry_msgs actionlib actionlib_msgs)
 
 ## System dependencies are found with CMake's conventions
-find_package(catkin REQUIRED COMPONENTS rospy std_msgs geometry_msgs actionlib_msgs)
+find_package(catkin REQUIRED COMPONENTS rospy genmsg std_msgs geometry_msgs actionlib actionlib_msgs)
 
 
 ## Uncomment this if the package has a setup.py. This macro ensures
@@ -99,7 +99,7 @@ generate_messages(
 catkin_package(
 #  INCLUDE_DIRS include
 #  LIBRARIES simulation
-  CATKIN_DEPENDS actionlib_msgs geometry_msgs std_msgs
+  CATKIN_DEPENDS actionlib_msgs 
 #  DEPENDS system_lib
 )
 
@@ -119,8 +119,11 @@ catkin_package(
 ## Add cmake target dependencies of the library
 ## as an example, code may need to be generated before libraries
 ## either from message generation or dynamic reconfigure
-# add_dependencies(simulation ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+##add_dependencies(simulation ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 
+add_dependencies(initialize_server ${planner_EXPORTED_TARGETS})
+add_dependencies(move_server ${planner_EXPORTED_TARGETS})
+add_dependencies(static_state_machine ${planner_EXPORTED_TARGETS})
 ## Declare a C++ executable
 # add_executable(simulation_node src/simulation_node.cpp)
 

@@ -1,41 +1,35 @@
 #!/usr/bin/python
-
 import smach
 import smach_ros
 import rospy
 from threading import Thread
 from planner import *
-import initialize_server,move_server
+#from planner.msg import *
 from smach_ros import SimpleActionState
+
 from actionlib import *
 from actionlib_msgs.msg import *
-from planner.msg import initializeAction, initializeGoal, initializeResult, initializeFeedback, moveAction, moveGoal, moveFeedback, moveResult
+from std_msgs.msg import Empty
+#from planner.msg import initializeAction, initializeGoal, initializeResult, initializeFeedback, moveAction, moveGoal, moveFeedback, moveResult
+import initialize_server,move_server
 
 
 
 
 
 
-#condition callback for idle since it is a condition state
-#TODO: setup to condition on a topic instead
 
-##def idle_cond_cb(ud):
-##    check = raw_input()
-##    if check == 1:
-##        return True
-##    else:
-##        return False
 
-class Idle(smach.State):
-    def __init__(self):
-        smach.State.__init__(self, outcomes=['outcome1'])
-    # Your state initialization goes here
 
-    def execute(self, userdata):
-    # Your state execution goes here
-        rospy.loginfo('idle')
-        return 'outcome1'
- 
+def instastopper(outcome_map):
+    if outcome_map['Monitor'] == 'invalid':
+        return True
+    return False
+
+def out_cb(outcome_map):
+        return 'done'
+    
+    
     
 
 #callbacks for move, parameter reading will be moved out of the goal callback for an easier time
@@ -43,10 +37,10 @@ class Idle(smach.State):
 def move_goal_cb(userdata,goal):
     counter = userdata.uid
     
-    params = userdata.moves[uid]
-    time = RosTime(params[0],params[1])
-    velocity = Twist(Vector3(params[2],params[3],params[4]),Vector3(params[5],params[6],params[7]))
-    move_goal = MoveGoal(time,velocity,params[8],params[9])
+    params = rospy.get_param('~/move'+str(counter))
+    time = rospy.Time(params.time[0],params.time[1])
+    velocity = geometry_msgs.Twist(Vector3(params.velocity[0],params.velocity[1],params.velocity[2]),Vector3(params.velocity[3],params.velocity[4],params.velocity[5]))
+    move_goal = moveGoal(time,velocity,params.theta,params.depth)
     userdata.uid += 1
     return move_goal
 #TODO: make this callback less limited and allow more arbitrary IDs
@@ -68,10 +62,10 @@ class InitializeServer(object):
 
 
     def __init__(self, name):
-        rospy.loginfo(self.execute_cb)
+        
         
         self._as = SimpleActionServer(name, initializeAction, execute_cb=self.execute_cb, auto_start=True)
-        rospy.loginfo('yolo')
+        
         
         #self._as.start()
 
@@ -87,66 +81,67 @@ class InitializeServer(object):
                 self._as.set_preempted()
                 success = False
                 break
-             rand = random.randint(0,1)
+             #rand = random.randint(0,1)
             
                 
              self._feedback.time_left = rospy.Time.from_sec(s)
              self._as.publish_feedback(self._feedback)
-             if rand == 0:
-                 self._result.offset = Pose(Point(10,10,10),Quaternion(20,20,20,20))
-                 rospy.loginfo('%s: Succeeded' % self._action_name)
-                 self._as.set_succeeded(self._result)
-                 break
+             #if rand == 0:
+             self._result.offset = geometry_msgs.Pose(Point(10,10,10),Quaternion(20,20,20,20))
+             rospy.loginfo('%s: Succeeded' % self._action_name)
+             self._as.set_succeeded(self._result)
+             break
              rospy.Rate(1).sleep()
 
 
         rospy.loginfo('%s: Preempted' % self._action_name)
         self._as.set_preempted()
 
-##class InitializeServer:
-##    def __init__(self,name):
-##        self._sas = SimpleActionServer(name,
-##                initializeAction,
-##                execute_cb=self.execute_cb)
-##        rospy.loginfo('bob')
-##
-##    def execute_cb(self, msg):
-##        rospy.logdebug('hi guyz')
-##        if msg.countdown.to_sec==10:
-##            self._sas.set_succeeded()
-##        elif msg.countdown.to_sec==2:
-##            self._sas.set_aborted()
-##        elif msg.countdown.to_sec==1:
-##            self._sas.set_preempted()
 
 
-def create_machine(static_sm):
+def monitor_cb(ud, msg):
+    return False
+
+
+def create_machine():
     
-    
-    with static_sm:
-        #countdown = rospy.get_param('countdown')
-        countdown1 = rospy.Time(10)
-        static_sm.userdata.uid = 0 
-        static_sm.userdata.moves = [[10,0,1,1,1,1,1,1,30,10],[10,0,1,1,1,1,1,1,30,10],[10,0,1,1,1,1,1,1,30,10],[10,0,1,1,1,1,1,1,20,10]]
+    square_concurrence = smach.Concurrence(outcomes=['done'],
+                                           default_outcome=['done'],
+                                           child_termination_cb=instastopper,
+                                           outcome_cb=out_cb)
+    with square_concurrence:
         
-        
-        smach.StateMachine.add('Idle',
-                               Idle(),
-                               transitions={'outcome1':'Initialize'})
-        smach.StateMachine.add('Initialize',
-                               SimpleActionState('initaction',
+        smach.Concurrence.add('Initialize',
+                               SimpleActionState('init_action',
                                                initializeAction,
                                                goal=initializeGoal(countdown=countdown1)),
-                               transitions={'succeeded':'Move',
-                                            'preempted':'Idle'})
-        smach.StateMachine.add('Move',
-                               SimpleActionState('squareaction',
+                               transitions={'succeeded':'Move'})
+
+        smach.Concurrence.add('Move',
+                               SimpleActionState('square_action',
                                                moveAction,
                                                goal_cb=move_goal_cb,
                                                result_cb=move_result_cb,
                                                outcomes=['done','notdone']),
-                               transitions={'notdone':'Move',
-                                            'done':'Idle'})
+                               transitions={'notdone':'Move'})
+
+        smach.Concurrence.add('Monitor', smach_ros.MonitorState("/sm_reset", Empty, monitor_cb))
+
+
+    static_sm = smach.StateMachine(outcomes=['done'])
+    
+    with static_sm:
+        #countdown = rospy.get_param('countdown')
+        #countdown1 = rospy.Time(10)
+        #static_sm.userdata.uid = 0 
+        smach.StateMachine.add('Idle',
+                               smach_ros.MonitorState("/sm_reset", Empty, monitor_cb),
+                               transitions={'invalid':'Square',
+                                            'valid':'Idle',
+                                            'preempted':'Idle',
+                                            'aborted':'Idle'})
+        smach.StateMachine.add('Square', square_concurrence, transitions={'done':'Idle'})  
+
     return static_sm
                                
                                                
@@ -181,24 +176,23 @@ def create_machine(static_sm):
 if __name__ == '__main__':
     rospy.init_node('square_state_machine',log_level=rospy.DEBUG)
     
-    server1 = InitializeServer('initaction')
-    server2 = move_server.MoveAction('squareaction')
-    sm0 = smach.StateMachine(
-        outcomes=['succeeded','aborted','preempted'])
-    sm = create_machine(sm0)
+    server1 = InitializeServer('init_action')
+    server2 = move_server.MoveAction('square_action')
+    
+    sm = create_machine()
  
-    #sis = smach_ros.IntrospectionServer('square_state_machine', sm, '/SM_ROOT')
-    #sis.starttaken from the threading method used in auv-2015 to avoid problems
-    #smach_thread = Thread(target=lambda: sm.execute())
-    #smach_thread.start()
+    sis = smach_ros.IntrospectionServer('square_state_machine', sm, '/SM_ROOT')
+    sis.start  #taken from the threading method used in auv-2015 to avoid problems
+    smach_thread = Thread(target=lambda: sm.execute())
+    smach_thread.start()
 
     #taken from auv-2015 to avoid the ctrl+c issue
     rospy.on_shutdown(sm.request_preempt)
-    outcome = sm.execute()
+    sm.execute()
     rospy.spin()
     
     
     
-    #smach_thread.join()
-    #sis.stop()
+    smach_thread.join()
+    sis.stop()
     

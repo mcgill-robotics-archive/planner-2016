@@ -2,11 +2,11 @@
 
 import rospy
 import actionlib
-import planner.msg
+from planner.msg import *
 
 class MoveAction(object):
   
-   _feedback = planner.msg.moveFeedback()
+   _feedback = moveFeedback()
    _result   = planner.msg.moveResult()
    def __init__(self, name):
     self._action_name = name
