@@ -1,7 +1,7 @@
 
 
 import rospy
-import actionlib
+from actionlib import *
 from actionlib_msgs.msg import *
 from planner.msg import *
 import random

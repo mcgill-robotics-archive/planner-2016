@@ -136,7 +136,7 @@ def create_machine():
 if __name__ == '__main__':
     rospy.init_node('square_state_machine',log_level=rospy.DEBUG)
     
-    server1 = InitializeServer('init_action')
+    server1 = initialize_server.InitializeServer('init_action')
     server2 = move_server.MoveAction('square_action')
     
     sm = create_machine()

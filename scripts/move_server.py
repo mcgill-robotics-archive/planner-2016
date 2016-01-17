@@ -1,16 +1,16 @@
 #! /usr/bin/env python
 
 import rospy
-import actionlib
-from planner import *
+from actionlib import *
+from planner.msg import *
 
 class MoveAction(object):
   
    _feedback = moveFeedback()
-   _result   = planner.msg.moveResult()
+   _result   = moveResult()
    def __init__(self, name):
     self._action_name = name
-    self._as = actionlib.SimpleActionServer(self._action_name, planner.msg.moveAction, execute_cb=self.execute_cb, auto_start = False)
+    self._as = actionlib.SimpleActionServer(self._action_name, moveAction, execute_cb=self.execute_cb, auto_start = False)
     self._as.start()
 
    def execute_cb(self,msg):
