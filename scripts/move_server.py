@@ -2,7 +2,7 @@
 
 import rospy
 import actionlib
-from planner.msg import *
+from planner import *
 
 class MoveAction(object):
   
