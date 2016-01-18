@@ -10,7 +10,7 @@ class MoveAction(object):
    _result   = moveResult()
    def __init__(self, name):
     self._action_name = name
-    self._as = actionlib.SimpleActionServer(self._action_name, moveAction, execute_cb=self.execute_cb, auto_start = False)
+    self._as = SimpleActionServer(self._action_name, moveAction, execute_cb=self.execute_cb, auto_start = False)
     self._as.start()
 
    def execute_cb(self,msg):
