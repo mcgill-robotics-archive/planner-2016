@@ -102,11 +102,15 @@ def monitor_cb(ud, msg):
 
 def create_machine():
 
+    
+
     init_concurrence = smach.Concurrence(outcomes=['stop','continue'],
                                            default_outcome='continue',
                                            child_termination_cb=instastopper1,
                                            outcome_cb=out_cb)
     with init_concurrence:
+
+        countdown1 = rospy.Time(10,0)
         
         smach.Concurrence.add('Initialize',
                                SimpleActionState('init_action',
@@ -132,6 +136,8 @@ def create_machine():
                                                moveAction,
                                                goal_cb=move_goal_cb,
                                                result_cb=move_result_cb,
+                                               input_keys=['uid'],
+                                               output_keys=['uid'],
                                                outcomes=['done','notdone']))
 
        
@@ -194,7 +200,7 @@ def create_machine():
 
 
 if __name__ == '__main__':
-    rospy.init_node('square_state_machine',log_level=rospy.DEBUG)
+    rospy.init_node('square_state_machine')
     
     server1 = initialize_server.InitializeServer('init_action')
     server2 = move_server.MoveAction('square_action')
