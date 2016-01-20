@@ -27,7 +27,7 @@ class InitializeServer(object):
         seconds = int(goal.countdown.secs) #floating point
         nanoseconds = goal.countdown.nsecs
 
-        for s in range(seconds,1,-1):
+        for s in range(seconds,0,-1):
              if self._as.is_preempt_requested():
                 rospy.loginfo('Initialize Preempted')
                 self._as.set_preempted()
@@ -40,11 +40,15 @@ class InitializeServer(object):
              self._as.publish_feedback(self._feedback)
              rospy.loginfo(self._feedback)
              #if rand == 0:
-             self._result.offset = Pose(Point(10,10,10),Quaternion(20,20,20,20))
-             rospy.loginfo('Initialize Succeeded')
-             self._as.set_succeeded(self._result)
-             break
+             
+             #break
              rospy.Rate(1).sleep()
+
+        self._result.offset = Pose(Point(10,10,10),Quaternion(20,20,20,20))
+        rospy.loginfo('Initialize Succeeded')
+        self._as.set_succeeded(self._result)
+
+
 
 
 ##        rospy.loginfo('Initialize Preempted')
