@@ -10,10 +10,12 @@ from smach_ros import SimpleActionState
 from actionlib import *
 from actionlib_msgs.msg import *
 from std_msgs.msg import Empty
+from geometry_msgs.msg import *
 
 import initialize_server,move_server
 
 
+#TODO: pretty up all the method names
 
 
 
@@ -21,39 +23,37 @@ import initialize_server,move_server
 
 
 
-def instastopper(outcome_map):
-    if outcome_map['Monitor'] == 'invalid':
-        return True
-    return False
-
-def out_cb(outcome_map):
-        return 'done'
     
     
     
+## Grabs the goal from the parameter server, using a counter in userdata to keep track of which move we're at
 
-#callbacks for move, parameter reading will be moved out of the goal callback for an easier time
-#(only the first and last 3 lines of that callback will remain)
 def move_goal_cb(userdata,goal):
     counter = userdata.uid
-    
+
     params = rospy.get_param('~/move'+str(counter))
-    time = rospy.Time(params.time[0],params.time[1])
-    velocity = geometry_msgs.Twist(Vector3(params.velocity[0],params.velocity[1],params.velocity[2]),Vector3(params.velocity[3],params.velocity[4],params.velocity[5]))
-    move_goal = moveGoal(time,velocity,params.theta,params.depth)
+    rospy.loginfo(params)
+    time_ = rospy.Time(params['time'][0],params['time'][1])
+    velocity = Twist(Vector3(params['velocity'][0],params['velocity'][1],params['velocity'][2]),Vector3(params['velocity'][3],params['velocity'][4],params['velocity'][5]))
+    move_goal = moveGoal(time_,velocity,params['theta'],params['depth'])
     userdata.uid += 1
     return move_goal
-#TODO: make this callback less limited and allow more arbitrary IDs
+
+## Processes whether we have done 4 moves or not and returns the appropriate outcome
 def move_result_cb(userdata,status,goal):
     if status == GoalStatus.SUCCEEDED:
-        if userdata.uid==4:
-            userdata.uid = 0
+        if userdata.uid==5:
+            userdata.uid = 1
             return 'done'
         else:
             return 'notdone'
 
 
 #import random
+
+'''instant stopping callbacks. These get called when a signal is sent from the button and preempt the state running concurrently with
+the corresponding monitor. Otherwise, they preempt the monitor when the state succeeds.'''
+
 
 def instastopper1(outcome_map):
     if outcome_map['Monitor'] == 'invalid' or outcome_map['Initialize']=='succeeded' :
@@ -65,14 +65,18 @@ def instastopper2(outcome_map):
         return True
     return False
 
+''' These callbacks are called when all states insie each corresponding concurrence are terminated, and decide what the outcomes
+of the concurrence are'''
+
+#idle goes to initialize when the button is pressed, hence the seemingly reversed outcomes (invalid means the button was pressed)
 def out_idle_cb(outcome_map):
     rospy.sleep(3.5)
     if outcome_map['Monitor']=='invalid':
         return 'invalid'
     else:
         return 'valid'
-
-def out_cb(outcome_map):
+#initialize goes to move when it succeeds, goes back to idle if stopped
+def out_init_cb(outcome_map):
     rospy.sleep(3.5)
     if outcome_map['Monitor']=='invalid':
         return 'stop'
@@ -81,7 +85,7 @@ def out_cb(outcome_map):
     else:
         return 'stop'
     
-    
+#move goes back to idle if it's stopped or once done, and loops if it hasn't finished doing all 4 moves   
 def out_move_cb(outcome_map):
     rospy.sleep(3.5)
     if outcome_map['Monitor'] == 'invalid' or outcome_map['Move']=='done':
@@ -94,20 +98,21 @@ def out_move_cb(outcome_map):
 
 
 
-
+#gets called when the button sends a signal
 def monitor_cb(ud, msg):
     rospy.loginfo('acting')
     return False
 
 
 def create_machine():
+    #containers have at least a monitor state that checks the button, plus the actual action state running (except Idle)
 
-    
+    #container for initialize
 
     init_concurrence = smach.Concurrence(outcomes=['stop','continue'],
                                            default_outcome='continue',
                                            child_termination_cb=instastopper1,
-                                           outcome_cb=out_cb)
+                                           outcome_cb=out_init_cb)
     with init_concurrence:
 
         countdown1 = rospy.Time(10,0)
@@ -124,6 +129,7 @@ def create_machine():
 
     static_sm = smach.StateMachine(outcomes=['done'])
 
+    #container for move
     move_concurrence = smach.Concurrence(outcomes=['stop','continue'],
                                            default_outcome='continue',
                                            input_keys=['uid'],
@@ -143,7 +149,7 @@ def create_machine():
        
         smach.Concurrence.add('Monitor', smach_ros.MonitorState("/sm_reset", Empty, monitor_cb))
 
-
+    #container for idle. It's a single monitor state, but is in a container to allow delays (to avoid concurrency problems)
     idle_concurrence=smach.Concurrence(outcomes=['valid','invalid'],
                                        default_outcome='valid',
                                        outcome_cb=out_idle_cb)
@@ -152,11 +158,11 @@ def create_machine():
         smach.Concurrence.add('Monitor', smach_ros.MonitorState("/sm_reset", Empty, monitor_cb)) 
 
         
-    
+    #actual state machine, linking the containers together
     with static_sm:
         #countdown = rospy.get_param('countdown')
         countdown1 = rospy.Time(10)
-        static_sm.userdata.uid = 0 
+        static_sm.userdata.uid = 1 
         smach.StateMachine.add('Idle',
                                idle_concurrence,
                                transitions={'invalid':'Init',
@@ -197,7 +203,7 @@ def create_machine():
 
 
 
-
+#main method TODO: fix ctrl+C
 
 if __name__ == '__main__':
     rospy.init_node('square_state_machine')

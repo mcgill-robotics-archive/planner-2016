@@ -38,6 +38,7 @@ class InitializeServer(object):
                 
              self._feedback.time_left = rospy.Time.from_sec(s)
              self._as.publish_feedback(self._feedback)
+             rospy.loginfo(self._feedback)
              #if rand == 0:
              self._result.offset = Pose(Point(10,10,10),Quaternion(20,20,20,20))
              rospy.loginfo('Initialize Succeeded')
@@ -46,8 +47,8 @@ class InitializeServer(object):
              rospy.Rate(1).sleep()
 
 
-        rospy.loginfo('%s: Preempted' % self._action_name)
-        self._as.set_preempted() 
+##        rospy.loginfo('Initialize Preempted')
+##        self._as.set_preempted() 
             
 
             
