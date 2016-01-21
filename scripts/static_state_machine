@@ -128,7 +128,8 @@ def create_machine():
                                            outcome_cb=out_init_cb)
     with init_concurrence:
 
-        countdown1 = rospy.Time(10,0)
+        paraminit = rospy.get_param('~/initialize')
+        countdown1 = rospy.Time(paraminit[0], paraminit[1])
         
         smach.Concurrence.add('Initialize',
                                SimpleActionState('init_action',

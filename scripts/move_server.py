@@ -34,8 +34,8 @@ class MoveAction(object):
                 success = False
                 break
             #random move calculations TODO: calculations that actually make sense
-             de = de-ve.linear.z
-             th = th-ve.angular.z
+             #de = de-ve.linear.z
+             #th = th-ve.angular.z
              self._feedback.time_left = rospy.Time().from_sec(ti)
              self._feedback.depth = de
              self._feedback.theta = th
