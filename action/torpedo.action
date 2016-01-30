@@ -1,0 +1,14 @@
+#goal
+time time
+bool firing
+geometry_msgs/Twist velocity
+float64 theta
+float64 depth
+--
+#result
+bool success
+--
+#feedback
+float64 depth
+time time_left
+float64 theta

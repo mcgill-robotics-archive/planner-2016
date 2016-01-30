@@ -4,16 +4,16 @@ project(planner)
 ## Find catkin macros and libraries
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
 ## is used, also find other catkin packages
-find_package(catkin REQUIRED)
+find_package(catkin REQUIRED rospy  genmsg std_msgs geometry_msgs actionlib actionlib_msgs)
 
 ## System dependencies are found with CMake's conventions
-# find_package(Boost REQUIRED COMPONENTS system)
+find_package(catkin REQUIRED COMPONENTS rospy genmsg std_msgs geometry_msgs actionlib actionlib_msgs)
 
 
 ## Uncomment this if the package has a setup.py. This macro ensures
 ## modules and global scripts declared therein get installed
 ## See http://ros.org/doc/api/catkin/html/user_guide/setup_dot_py.html
-# catkin_python_setup()
+catkin_python_setup()
 
 ################################################
 ## Declare ROS messages, services and actions ##
@@ -54,17 +54,19 @@ find_package(catkin REQUIRED)
 # )
 
 ## Generate actions in the 'action' folder
-# add_action_files(
-#   FILES
-#   Action1.action
-#   Action2.action
-# )
+ add_action_files(
+   DIRECTORY action
+   FILES
+   initialize.action
+   move.action
+   torpedo.action
+ )
 
 ## Generate added messages and services with any dependencies listed here
-# generate_messages(
-#   DEPENDENCIES
-#   std_msgs  # Or other packages containing msgs
-# )
+generate_messages(
+   DEPENDENCIES actionlib_msgs std_msgs geometry_msgs
+     
+ )
 
 ################################################
 ## Declare ROS dynamic reconfigure parameters ##
@@ -98,7 +100,7 @@ find_package(catkin REQUIRED)
 catkin_package(
 #  INCLUDE_DIRS include
 #  LIBRARIES simulation
-#  CATKIN_DEPENDS other_catkin_pkg
+  CATKIN_DEPENDS actionlib_msgs 
 #  DEPENDS system_lib
 )
 
@@ -118,7 +120,8 @@ catkin_package(
 ## Add cmake target dependencies of the library
 ## as an example, code may need to be generated before libraries
 ## either from message generation or dynamic reconfigure
-# add_dependencies(simulation ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+##add_dependencies(simulation ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+
 
 ## Declare a C++ executable
 # add_executable(simulation_node src/simulation_node.cpp)
