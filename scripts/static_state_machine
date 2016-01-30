@@ -121,6 +121,7 @@ def create_machine():
     #containers have at least a monitor state that checks the button, plus the actual action state running (except Idle)
 
     #container for initialize
+    static_sm = smach.StateMachine(outcomes=['done'])
 
     init_concurrence = smach.Concurrence(outcomes=['stop','continue'],
                                            default_outcome='continue',
@@ -141,7 +142,7 @@ def create_machine():
         smach.Concurrence.add('Monitor', smach_ros.MonitorState("/sm_reset", Bool, monitor_cb_stop))
 
 
-    static_sm = smach.StateMachine(outcomes=['done'])
+    
 
     #container for move
     move_concurrence = smach.Concurrence(outcomes=['stop','continue'],
