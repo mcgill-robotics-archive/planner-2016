@@ -1,0 +1,15 @@
+#goal
+time time
+geometry_msgs/Twist velocity
+float64 theta
+float64 depth
+bool drag_yellow
+---
+#result
+bool success
+---
+#feedback
+float64 depth
+float64 theta
+time time_left
+geometry_msgs/Twist velocity

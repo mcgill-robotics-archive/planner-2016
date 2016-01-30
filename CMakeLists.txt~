@@ -59,7 +59,6 @@ catkin_python_setup()
    FILES
    initialize.action
    move.action
-   buoy.action ##action for buoy
  )
 
 ## Generate added messages and services with any dependencies listed here

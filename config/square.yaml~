@@ -1,0 +1,4 @@
+initialize: [10,0]
+buoy1: {time:[3,0], velocity:[3,0,0,0,0,3], theta: 0.0, depth: 10.0}
+buoy2: {time:[3,0], velocity:[3,0,0,0,0,3], theta: 1.0, depth: 10.0}
+buoy2: {time:[3,0], velocity:[3,0,0,0,0,3], theta: 1.0, depth: 10.0}
