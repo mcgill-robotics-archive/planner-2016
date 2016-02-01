@@ -126,8 +126,8 @@ def create_machine():
         smach.Concurrence.add('Torpedo',
                                 SimpleActionState('torpedo_action',
                                                torpedoAction,
-                                               goal_cb=move_goal_cb,
-                                               result_cb=move_result_cb,
+                                               goal_cb=fire_goal_cb,
+                                               result_cb=fire_result_cb,
                                                input_keys=['uid'],
                                                output_keys=['uid'],
                                                outcomes=['done','notdone']))
@@ -200,6 +200,3 @@ if __name__ == '__main__':
 
     smach_thread.join()
     sis.stop()
-        
-            
-
