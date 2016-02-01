@@ -7,8 +7,10 @@ float64 depth
 --
 #result
 bool success
+bool fire_again
 --
 #feedback
 float64 depth
 time time_left
 float64 theta
+bool firing

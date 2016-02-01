@@ -35,21 +35,28 @@ def instastopper(outcome_map):
 def monitor_cb(ud, msg):
     return False
 
-## Grabs the goal from the parameter server, using a counter in userdata to keep track of which move we're at
+## Grabs the goal from the parameter server, using a counter in userdata to keep track of how many torpedos we have fired
 
-def move_goal_cb(userdata,goal):
+def fire_goal_cb(userdata,goal):
+
     counter = userdata.uid
     
     params = rospy.get_param('~/torpedo'+str(counter))
+
     rospy.loginfo(params)
+
     time_ = rospy.Time(params['time'][0],params['time'][1])
+
     velocity = Twist(Vector3(params['velocity'][0],params['velocity'][1],params['velocity'][2]),Vector3(params['velocity'][3],params['velocity'][4],params['velocity'][5]))
-    torpedo_goal = moveGoal(time_,velocity,params['theta'],params['depth'],params['firing'])
+
+    torpedo_goal = fireGoal(time_,velocity,params['theta'],params['depth'],params['firing'])
+
     userdata.uid += 1
+
     return torpedo_goal
 
-## Processes whether we have done 4 moves or not and returns the appropriate outcome
-def move_result_cb(userdata,status,goal):
+## Processes whether we have finished firing or not and returns the appropriate outcome
+def fire_result_cb(userdata,status,goal):
     if status == GoalStatus.SUCCEEDED:
         if userdata.uid==5:
             userdata.uid = 1
