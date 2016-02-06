@@ -18,7 +18,7 @@ from smach_ros import SimpleActionState
 ## Grabs the goal from the parameter server
 def fire_goal_cb(userdata,goal):
 
-    '''
+
     counter = userdata.uid
 
     params = rospy.get_param('~/torpedo'+str(counter))
@@ -33,11 +33,10 @@ def fire_goal_cb(userdata,goal):
     # Store if we need to fire again
     #userdata.fire_again = torpedo_goal.fire_again
 
-    # I don't know wtf this does
     #userdata.uid += 1
 
     return torpedo_goal
-    '''
+
 ## Processes whether we have finished firing or not, if we need to fire again,
 ##  and returns the appropriate outcome.
 def fire_result_cb(userdata,status,result):
