@@ -15,25 +15,23 @@ from geometry_msgs.msg import *
 import initialize_server,move_server
 
 
-def move_goal_cb(userdata,goal):
-    counter = userdata.uid
+def octo_goal_cb(userdata,goal):
+    counter = userdata.octoid
 
-    params = rospy.get_param('~/move'+str(counter))
+    params = rospy.get_param(octoid)
     #rospy.loginfo(params)
     time_ = rospy.Time(params['time'][0],params['time'][1])
     velocity = Twist(Vector3(params['velocity'][0],params['velocity'][1],params['velocity'][2]),Vector3(params['velocity'][3],params['velocity'][4],params['velocity'][5]))
-    octogon_goal = octogonGoal(time_,velocity,params['theta'],params['depth'],params['claw'],params['surfacing'])
-    userdata.uid += 1
+    octogon_goal = octogonGoal(time_,velocity,params['theta'],params['depth'],params['claw'])
+    #userdata.uid += 1
     return octogon_goal
 
-## Processes whether we have done 4 moves or not and returns the appropriate outcome
-def move_result_cb(userdata,status,goal):
+def octo_result_cb(userdata,status,goal,result):
     if status == GoalStatus.SUCCEEDED:
-        if userdata.uid==5:
-            userdata.uid = 1
-            return 'done'
-        else:
-            return 'notdone'
+        userdata.octoid+=1
+        if result==True:
+            
+
 
 
 
@@ -57,7 +55,7 @@ def instastopper2(outcome_map):
         return True
     return False
 
-def out_move_cb(outcome_map):
+def out_octo_cb(outcome_map):
     rospy.sleep(3.5)
     if outcome_map['Monitor'] == 'invalid' or outcome_map['Octogon']=='done':
         return 'stop'
@@ -75,18 +73,18 @@ def create_machine():
 
    octogon_concurrence = smach.Concurrence(outcomes=['stop','continue'],
                                            default_outcome='continue',
-                                           input_keys=['uid'],
-                                           output_keys=['uid'],
+                                           input_keys=['octoid','doubloon', 'x'],
+                                           output_keys=['octoid','doubloon','x'],
                                            child_termination_cb=instastopper2,
                                            outcome_cb=out_move_cb)
-    with move_concurrence:
+    with octogon_concurrence:
         smach.Concurrence.add('Octogon',
                                 SimpleActionState('octogon_action',
                                                octogonAction,
-                                               goal_cb=move_goal_cb,
-                                               result_cb=move_result_cb,
-                                               input_keys=['uid'],
-                                               output_keys=['uid'],
+                                               goal_cb=octo_goal_cb,
+                                               result_cb=octo_result_cb,
+                                               input_keys=['octoid','doubloon','x'],
+                                               output_keys=['octoid','doubloon','x'],
                                                outcomes=['done','notdone']))
 
        
@@ -102,18 +100,18 @@ def create_machine():
 
 
     with static_sm:
-        #countdown = rospy.get_param('countdown')
-        countdown1 = rospy.Time(10)
-        static_sm.userdata.uid = 1 
+        
+        static_sm.userdata.octoid = 0 
         smach.StateMachine.add('Idle',
                                idle_concurrence,
-                               transitions={'invalid':'Init',
+                               transitions={'invalid':'Octogon',
                                             'valid':'Idle'})
-        smach.StateMachine.add('Init', init_concurrence, transitions={'continue':'Movement',
-                                                                      'stop':'Idle'})
-        smach.StateMachine.add('Movement', move_concurrence, transitions={'continue':'Movement',
+        
+        smach.StateMachine.add('Octogon', move_concurrence, transitions={'continue':'Octogon',
                                                                           'stop':'Idle'},
-                               remapping={'uid':'uid'})
+                               remapping={'octoid':'octoid',
+                                          'doubloon':'doubloon',
+                                          'x':'x'})
 
     
     return static_sm

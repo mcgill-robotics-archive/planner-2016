@@ -4,10 +4,10 @@ geometry_msgs/Twist velocity
 float64 theta
 float64 depth
 bool claw
-bool surfacing
 ---
 #result
 bool success
+int64 which
 ---
 #feedback
 float64 depth
