@@ -12,17 +12,17 @@ from actionlib_msgs.msg import *
 from std_msgs.msg import Bool
 from geometry_msgs.msg import *
 
-import initialize_server,move_server
+import initialize_server,move_server,buoy_server
 
 ##gets the goals for non-static stuff
 def buoy_goal_cb(userdata,goal):
     counter = userdata.uid
 ##This is where to get parameters
     params = rospy.get_param( '~/buoy'+counter)
-##    #rospy.loginfo(params)
-    ##time_ = rospy.Time(params['time'][0],params['time'][1])
-    ##velocity = Twist(Vector3(params['velocity'][0],params['velocity'][1],params['velocity'][2]),Vector3(params['velocity'][3],params['velocity'][4],params['velocity'][5]))
-    ## buoy_goal = buoyGoal(time_,velocity,params['theta'],params['depth'],velocity)
+    rospy.loginfo(params)
+    time_ = rospy.Time(params['time'][0],params['time'][1])
+    velocity = Twist(Vector3(params['velocity'][0],params['velocity'][1],params['velocity'][2]),Vector3(params['velocity'][3],params['velocity'][4],params['velocity'][5]))
+    buoy_goal = buoyGoal(time_,velocity,params['theta'],params['depth'],velocity)
     userdata.uid += 1
     return buoy_goal
 #
@@ -37,7 +37,7 @@ def buoy_result_cb(userdata,status,goal):
 def instastopper1(outcome_map):
     if outcome_map['Monitor'] == 'invalid' or outcome_map['buoy']=='succeeded' or outcome_map['buoy']=='not done':
         return True ##This 'preempts' the container
-    return False
+        return False
 
 #gets called when the button (abort) sends a signal
 def monitor_cb_start(ud, msg):
@@ -53,6 +53,14 @@ def monitor_cb_stop(ud, msg):
         return False
     else:
         return True
+
+def out_idle_cb(outcome_map):
+    rospy.sleep(3.5)
+    if outcome_map['Monitor']=='invalid':
+        return 'invalid'
+    else:
+        return 'valid'
+
 
 def out_buoy_cb(outcome_map):
     rospy.sleep(3.5) ##pauses for 3.5 lengths of time
@@ -70,26 +78,24 @@ def create_machine():
     static_sm = smach.StateMachine(outcomes=['done'])
 
     ##Smach.Concurrence? removed smach.
-    buoy_concurrence = Concurrence(outcomes=['stop','continue'],
-                                           default_outcome='continue',
-                                           child_termination_cb=instastopper1, ##instastopper thing
-                                           outcome_cb=out_buoy_cb)
-    with buoy_concurrence:
+    buoy_concurrence = smach.Concurrence(outcomes=['stop','continue'], default_outcome='continue',child_termination_cb=instastopper1, outcome_cb=out_buoy_cb)
 
+    with buoy_concurrence:
         ##paraminit = rospy.get_param('~/initialize')
         ##countdown1 = rospy.Time(paraminit[0], paraminit[1])
-
         smach.Concurrence.add('buoy',
                                SimpleActionState('buoy_action',
-                                               buoy,
-                                               goal=buoyGoal(time = rospy.time, velocity = Twist(Vector3(params['velocity'][0],params['velocity'][1],params['velocity'][2]),Vector3(params['velocity'][3],params['velocity'][4],params['velocity'][5])))
+                                               buoyAction,
+                                               goal=buoyGoal(time = rospy.Time())))
+                                               ##goal=buoy_goal_cb)
 
-        ##smach.Concurrence.add('Monitor', smach_ros.MonitorState("/sm_reset", Bool, monitor_cb_stop))
+
+        smach.Concurrence.add('Monitor', smach_ros.MonitorState("/sm_reset", Bool, monitor_cb_stop))
 
     #container for idle. It's a single monitor state, but is in a container to allow delays (to avoid concurrency problems)
     idle_concurrence=smach.Concurrence(outcomes=['valid','invalid'],
-                                       default_outcome='valid',
-                                       outcome_cb=out_idle_cb)
+                                        default_outcome='valid',
+                                        outcome_cb=out_idle_cb)
 
     with idle_concurrence:
         smach.Concurrence.add('Monitor', smach_ros.MonitorState("/sm_reset", Bool, monitor_cb_start))
@@ -105,7 +111,7 @@ def create_machine():
                                             'valid':'Idle'})
         smach.StateMachine.add('buoy', buoy_concurrence, transitions={'continue':'Movement',
                                                                       'stop':'Idle'})
-        smach.StateMachine.add('Movement', move_concurrence, transitions={'continue':'Movement',
+        smach.StateMachine.add('Movement', buoy_concurrence, transitions={'continue':'Movement',
                                                                           'stop':'Idle'},
                                remapping={'uid':'uid'})
 
@@ -118,7 +124,7 @@ def create_machine():
 if __name__ == '__main__':
     rospy.init_node('square_state_machine')
 
-    server1 = buoy_server.BuoyServer('buoy_action')
+    server1 = buoy_server.ActionServer('buoy_action')
 
     sm = create_machine()
 
