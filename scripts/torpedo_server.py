@@ -6,30 +6,30 @@ from geometry_msgs.msg import *
 import random
 
 
-class TorpedoAction(object): 
+class TorpedoServer(object):
 
-    _feedback = tropFireFeedback()
+    _feedback = torpedoFeedback()
 
-    _result = tropFireResult() 
+    _result = torpedoResult()
 
-    def __init__(self, name): 
+    def __init__(self, name):
 
         self._action_name = name
 
-        self._as = actionlib,SimpleActionServer(self._action_name, torpedoAction, execute_cb=self._execute_cb, autostart = False) 
+        self._as = SimpleActionServer(self._action_name, torpedoAction, execute_cb=self.execute_cb, auto_start = False)
 
-        self_as.start() 
+        self._as.start()
 
     def execute_cb(self,goal):
 
         #grab all the parameters
-      
+
         success = True
         ti = int(goal.time.secs)
         ve = goal.velocity
         th = goal.theta
         de = goal.depth
-        firing = goal.firing 
+        firing = goal.firing
 
 
 
@@ -52,38 +52,37 @@ class TorpedoAction(object):
              #de = de-ve.linear.z
              #th = th-ve.angular.z
 
-            self._feedback.time_left = rospy.Time().from_sec(ti)
+             self._feedback.time_left = rospy.Time().from_sec(ti)
 
-            self._feedback.depth = de
+             self._feedback.depth = de
 
-            self._feedback.theta = th
+             self._feedback.theta = th
 
-            self._feedback.firing = firing
+             self._feedback.firing = firing
 
-            self._as.publish_feedback(self._feedback)
+             self._as.publish_feedback(self._feedback)
 
-            rospy.loginfo(self._feedback)
+             rospy.loginfo(self._feedback)
 
-            rospy.Rate(1).sleep
+             rospy.Rate(1).sleep
 
       #what to send after succesfully moving
 
         if success:
 
-            # Random logic to state whether we need to fire again or not 
+            # Random logic to state whether we need to fire again or not
             fireagain = random.randrange(0,2)
             if ( fireagain == 1):
                 # fire again
                 self._result.fire_again = True
-            else: 
+            else:
                 self._result.fire_again = False
 
 
             self._result.success = True
 
             rospy.loginfo('%s: Succeeded' % self._action_name)
-            rospy.loginfo('Fire again: %s' % self._result.fire_again) 
+            rospy.loginfo('Fire again: %s' % self._result.fire_again)
             self._as.set_succeeded(self._result)
-                
-             
-          
+
+# Rasins
