@@ -15,34 +15,10 @@ import initialize_server,move_server,torpedo_server
 from smach_ros import SimpleActionState
 
 
-
-class Fire(smach.State):
-    def __init__(self):
-        smach.State.__init__(self, outcomes=['succeeded', 'preempted', 'aborted', 'done', 'notdone'])
-    def execute(self, userdata):
-        rospy.loginfo('Firing')
-        rospy.sleep(10)
-        if self.preempt_requested:
-            self.service_preempty()
-            return 'preempted'
-        if userdata.uid==1:
-            userdata.uid = 0
-            return 'done'
-        else:
-            return 'notdone'
-
-def instastopper(outcome_map):
-    if outcome_map['Monitor'] == 'invalid':
-        return True
-    return False
-
-def monitor_cb(ud, msg):
-    return False
-
 ## Grabs the goal from the parameter server
-
 def fire_goal_cb(userdata,goal):
 
+    '''
     counter = userdata.uid
 
     params = rospy.get_param('~/torpedo'+str(counter))
@@ -61,11 +37,11 @@ def fire_goal_cb(userdata,goal):
     #userdata.uid += 1
 
     return torpedo_goal
-
+    '''
 ## Processes whether we have finished firing or not, if we need to fire again,
 ##  and returns the appropriate outcome.
-
 def fire_result_cb(userdata,status,result):
+    rospy.loginfo("result")
     if status == GoalStatus.SUCCEEDED:
         #if result.fire_again==False:
             # What does uid do?
@@ -92,6 +68,7 @@ def monitor_cb_stop(ud, msg):
 
 
 def instastopper2(outcome_map):
+    rospy.loginfo("Insta2")
     if outcome_map['Monitor']=='invalid' or outcome_map['Torpedo']=='done' or outcome_map['Torpedo']=='notdone':
         return True
     return False
@@ -99,24 +76,17 @@ def instastopper2(outcome_map):
 #idle goes to initialize when the button is pressed, hence the seemingly reversed outcomes (invalid means the button was pressed)
 def out_idle_cb(outcome_map):
     rospy.sleep(3.5)
+    rospy.loginfo("out_idle_cb")
     if outcome_map['Monitor']=='invalid':
         return 'invalid'
     else:
         return 'valid'
 
-#initialize goes to fire when it succeeds, goes back to idle if stopped
-def out_init_cb(outcome_map):
-    rospy.sleep(3.5)
-    if outcome_map['Monitor']=='invalid':
-        return 'stop'
-    elif outcome_map['Initialize']=='succeeded':
-        return 'continue'
-    else:
-        return 'stop'
 
 # Goes back to idle if it's stopped or once done, and loops if it hasn't firing.
 def out_torpedo_cb(outcome_map):
     rospy.sleep(3.5)
+    rospy.loginfo("out_torpedo_cb")
     if outcome_map['Monitor'] == 'invalid' or outcome_map['Torpedo']=='done':
         return 'stop'
     elif outcome_map['Torpedo']=='notdone':
@@ -144,13 +114,14 @@ def create_machine():
                                            input_keys=['uid','fire_again'],
                                            output_keys=['uid','fire_again'],
                                            child_termination_cb=instastopper2,
-                                           outcome_cb=out_torpedo_cb)
+                                           #outcome_cb=out_torpedo_cb
+                                           )
     with torpedo_concurrence:
         smach.Concurrence.add('Torpedo',
                                 SimpleActionState('torpedo_action',
                                                torpedoAction,
-                                               goal_cb=fire_goal_cb,
-                                               result_cb=fire_result_cb,
+                                               #goal_cb=fire_goal_cb,
+                                               #result_cb=fire_result_cb,
                                                input_keys=['uid','fire_again'],
                                                output_keys=['uid','fire_again'],
                                                outcomes=['done','notdone', ]))
@@ -192,7 +163,7 @@ if __name__ == '__main__':
 
     sm = create_machine()
 
-    sis = smach_ros.IntrospectionServer('tropedo', sm, '/SM_ROOT')
+    sis = smach_ros.IntrospectionServer('torpedo', sm, '/SM_ROOT')
     sis.start
     smach_thread = Thread(target=lambda: sm.execute())
     smach_thread.start()
