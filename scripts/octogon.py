@@ -16,6 +16,7 @@ import initialize_server,move_server
 
 
 def octo_goal_cb(userdata,goal):
+
     counter = userdata.octoid
 
     params = rospy.get_param(octoid)
@@ -30,7 +31,7 @@ def octo_result_cb(userdata,status,goal,result):
     if status == GoalStatus.SUCCEEDED:
         userdata.octoid+=1
         if result==True:
-            
+
 
 
 
@@ -70,6 +71,31 @@ def out_octo_cb(outcome_map):
 def create_machine():
    static_sm = smach.StateMachine(outcomes=['done'])
 
+   octogon_sm = smach.StateMachine(outcomes=['succeeded','failed'])
+
+   with octogon_sm:
+       smach.Concurrence.add('Grab',
+                                   SimpleActionState('grab_action',
+                                                  grabAction,
+                                                  goal_cb=grab_goal_cb,
+                                                  result_cb=grab_result_cb,
+                                                  input_keys=['doubloon'],
+                                                  output_keys=['doubloon'],
+                                                  outcomes=['done','notdone']))
+
+       smach.Concurrence.add('Octogon',
+                                   SimpleActionState('surface_action',
+                                                  surfaceAction,
+                                                  goal_cb=surface_goal_cb,
+                                                  result_cb=surface_result_cb,
+                                                  input_keys=['retrying'],
+                                                  output_keys=['retrying'],
+                                                  outcomes=['done','notdone']))
+
+
+
+
+
 
    octogon_concurrence = smach.Concurrence(outcomes=['stop','continue'],
                                            default_outcome='continue',
@@ -77,17 +103,18 @@ def create_machine():
                                            output_keys=['octoid','doubloon','x'],
                                            child_termination_cb=instastopper2,
                                            outcome_cb=out_move_cb)
-    with octogon_concurrence:
-        smach.Concurrence.add('Octogon',
-                                SimpleActionState('octogon_action',
-                                               octogonAction,
-                                               goal_cb=octo_goal_cb,
-                                               result_cb=octo_result_cb,
-                                               input_keys=['octoid','doubloon','x'],
-                                               output_keys=['octoid','doubloon','x'],
-                                               outcomes=['done','notdone']))
+     with octogon_concurrence:
 
-       
+    #     smach.Concurrence.add('Octogon',
+    #                             SimpleActionState('octogon_action',
+    #                                            octogonAction,
+    #                                            goal_cb=octo_goal_cb,
+    #                                            result_cb=octo_result_cb,
+    #                                            input_keys=['octoid','doubloon','x'],
+    #                                            output_keys=['octoid','doubloon','x'],
+    #                                            outcomes=['done','notdone']))
+
+
         smach.Concurrence.add('Monitor', smach_ros.MonitorState("/sm_reset", Bool, monitor_cb_stop))
 
      idle_concurrence=smach.Concurrence(outcomes=['valid','invalid'],
@@ -95,25 +122,25 @@ def create_machine():
                                        outcome_cb=out_idle_cb)
 
     with idle_concurrence:
-        smach.Concurrence.add('Monitor', smach_ros.MonitorState("/sm_reset", Bool, monitor_cb_start)) 
+        smach.Concurrence.add('Monitor', smach_ros.MonitorState("/sm_reset", Bool, monitor_cb_start))
 
 
 
     with static_sm:
-        
-        static_sm.userdata.octoid = 0 
+
+        static_sm.userdata.octoid = 0
         smach.StateMachine.add('Idle',
                                idle_concurrence,
                                transitions={'invalid':'Octogon',
                                             'valid':'Idle'})
-        
+
         smach.StateMachine.add('Octogon', move_concurrence, transitions={'continue':'Octogon',
                                                                           'stop':'Idle'},
                                remapping={'octoid':'octoid',
                                           'doubloon':'doubloon',
                                           'x':'x'})
 
-    
+
     return static_sm
 
 
@@ -174,12 +201,12 @@ def create_machine():
 
 if __name__ == '__main__':
     rospy.init_node('square_state_machine')
-    
+
     server1 = octogon_server.OctogonServer('octogon_action')
 
-    
+
     sm = create_machine()
- 
+
     sis = smach_ros.IntrospectionServer('octogon', sm, '/SM_ROOT')
     sis.start  #taken from the threading method used in auv-2015 to avoid problems
     smach_thread = Thread(target=lambda: sm.execute())
@@ -189,8 +216,8 @@ if __name__ == '__main__':
     rospy.on_shutdown(sm.request_preempt)
     sm.execute()
     rospy.spin()
-    
-    
-    
+
+
+
     smach_thread.join()
     sis.stop()
