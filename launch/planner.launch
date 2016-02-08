@@ -1,5 +1,9 @@
 <launch>
+<<<<<<< HEAD
     <node name="planner" pkg="planner" type="static_state_machine" >
+=======
+    <node name="planner" pkg="planner" type="testingtesting" output="screen">
+>>>>>>> create torpedo task
         <rosparam command "load"  file="~/auv-2015/catkin_ws/src/planner/config/square.yaml" />
     </node>
     

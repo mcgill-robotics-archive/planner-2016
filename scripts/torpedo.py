@@ -1,43 +1,52 @@
-#!/usr/bin/python
+#!/user/bin/python
+
+import rospy
 import smach
 import smach_ros
-import rospy
-from threading import Thread
-from planner import *
-from planner.msg import *
-from smach_ros import SimpleActionState
+from std_msgs.msg import Empty
+from threading import import Thread
+from planner import import * 
+from planner.msg import * bool
+from geometry_msgs.msg import * 
 
-from actionlib import *
-from actionlib_msgs.msg import *
-from std_msgs.msg import Bool
-from geometry_msgs.msg import *
-
-import initialize_server,move_server
+import initalize_server,move_server 
 
 
-#TODO: pretty up all the method names
+class Fire(smach.State): 
+    def __init__(self):
+        smach.State.__init__(self, outcomes=['succeeded', 'preempted', 'aborted', 'done', 'notdone'])
+    def execute(self, userdata):
+        rospy.loginfo('Firing') 
+        rospy.sleep(10)
+        if self.preempt_requested:
+            self.service_preempty()
+            return 'preempted' 
+        if userdata.uid==1:
+            userdata.uid = 0 
+            return 'done' 
+        else: 
+            return 'notdone' 
 
+def instastopper(outcome_map):
+    if outcome_map['Monitor'] == 'invalid':
+        return True
+    return False
 
+def monitor_cb(ud, msg):
+    return False
 
-
-
-
-
-    
-    
-    
 ## Grabs the goal from the parameter server, using a counter in userdata to keep track of which move we're at
 
 def move_goal_cb(userdata,goal):
     counter = userdata.uid
-
-    params = rospy.get_param('~/move'+str(counter))
+    
+    params = rospy.get_param('~/torpedo'+str(counter))
     rospy.loginfo(params)
     time_ = rospy.Time(params['time'][0],params['time'][1])
     velocity = Twist(Vector3(params['velocity'][0],params['velocity'][1],params['velocity'][2]),Vector3(params['velocity'][3],params['velocity'][4],params['velocity'][5]))
-    move_goal = moveGoal(time_,velocity,params['theta'],params['depth'])
+    torpedo_goal = moveGoal(time_,velocity,params['theta'],params['depth'],params['firing'])
     userdata.uid += 1
-    return move_goal
+    return torpedo_goal
 
 ## Processes whether we have done 4 moves or not and returns the appropriate outcome
 def move_result_cb(userdata,status,goal):
@@ -46,27 +55,29 @@ def move_result_cb(userdata,status,goal):
             userdata.uid = 1
             return 'done'
         else:
+            # userdata.torpcounter += 1 
             return 'notdone'
 
-
-#import random
-
-'''instant stopping callbacks. These get called when a signal is sent from the button and preempt the state running concurrently with
-the corresponding monitor. Otherwise, they preempt the monitor when the state succeeds.'''
-
-
-def instastopper1(outcome_map):
-    if outcome_map['Monitor'] == 'invalid' or outcome_map['Initialize']=='succeeded' :
+#gets called when the button sends a signal
+def monitor_cb_start(ud, msg):
+    if msg.data == True:
+        rospy.loginfo('Starting!!')
+        return False
+    else:
         return True
-    return False
+
+def monitor_cb_stop(ud, msg):
+    if msg.data == False:
+        rospy.loginfo('Stopping!')
+        return False
+    else:
+        return True
+
 
 def instastopper2(outcome_map):
-    if outcome_map['Monitor']=='invalid' or outcome_map['Move']=='done' or outcome_map['Move']=='notdone':
+    if outcome_map['Monitor']=='invalid' or outcome_map['Torpedo']=='done' or outcome_map['Torpedo']=='notdone':
         return True
     return False
-
-''' These callbacks are called when all states insie each corresponding concurrence are terminated, and decide what the outcomes
-of the concurrence are'''
 
 #idle goes to initialize when the button is pressed, hence the seemingly reversed outcomes (invalid means the button was pressed)
 def out_idle_cb(outcome_map):
@@ -84,84 +95,30 @@ def out_init_cb(outcome_map):
         return 'continue'
     else:
         return 'stop'
-    
+
 #move goes back to idle if it's stopped or once done, and loops if it hasn't finished doing all 4 moves   
 def out_move_cb(outcome_map):
     rospy.sleep(3.5)
-    if outcome_map['Monitor'] == 'invalid' or outcome_map['Move']=='done':
+    if outcome_map['Monitor'] == 'invalid' or outcome_map['Torpedo']=='done':
         return 'stop'
     elif outcome_map['Move']=='notdone':
         return 'continue'
     else:
         return 'stop'
     
-
-
-
-#gets called when the button sends a signal
-def monitor_cb_start(ud, msg):
-    if msg.data == True:
-        rospy.loginfo('Starting!!')
-        return False
-    else:
-        return True
-
-def monitor_cb_stop(ud, msg):
-    if msg.data == False:
-        rospy.loginfo('Stopping!')
-        return False
-    else:
-        return True
-
-        
-
-
-
 def create_machine():
-    #containers have at least a monitor state that checks the button, plus the actual action state running (except Idle)
-
-    #container for initialize
-<<<<<<< HEAD
+	
     static_sm = smach.StateMachine(outcomes=['done'])
-=======
->>>>>>> create torpedo task
-
-    init_concurrence = smach.Concurrence(outcomes=['stop','continue'],
-                                           default_outcome='continue',
-                                           child_termination_cb=instastopper1,
-                                           outcome_cb=out_init_cb)
-    with init_concurrence:
-
-        paraminit = rospy.get_param('~/initialize')
-        countdown1 = rospy.Time(paraminit[0], paraminit[1])
-        
-        smach.Concurrence.add('Initialize',
-                               SimpleActionState('init_action',
-                                               initializeAction,
-                                               goal=initializeGoal(countdown=countdown1)))
-
-       
-
-        smach.Concurrence.add('Monitor', smach_ros.MonitorState("/sm_reset", Bool, monitor_cb_stop))
-
-
-<<<<<<< HEAD
-    
-=======
-    static_sm = smach.StateMachine(outcomes=['done'])
->>>>>>> create torpedo task
-
-    #container for move
-    move_concurrence = smach.Concurrence(outcomes=['stop','continue'],
+    torpedo_concurrence = smach.Concurrence(outcomes=['stop','continue'],
                                            default_outcome='continue',
                                            input_keys=['uid'],
                                            output_keys=['uid'],
                                            child_termination_cb=instastopper2,
                                            outcome_cb=out_move_cb)
-    with move_concurrence:
-        smach.Concurrence.add('Move',
-                                SimpleActionState('square_action',
-                                               moveAction,
+    with torpedo_concurrence:
+        smach.Concurrence.add('Torpedo',
+                                SimpleActionState('torpedo_action',
+                                               torpedoAction,
                                                goal_cb=move_goal_cb,
                                                result_cb=move_result_cb,
                                                input_keys=['uid'],
@@ -196,57 +153,46 @@ def create_machine():
                                remapping={'uid':'uid'})
 
     
-    return static_sm
-                               
-                                               
-        
-        
+
+
+    #actual state machine, linking the containers together
+    with static_sm:
+        #countdown = rospy.get_param('countdown')
+        countdown1 = rospy.Time(10)
+        static_sm.userdata.uid = 1 
+        smach.StateMachine.add('Idle',
+                               idle_concurrence,
+                               transitions={'invalid':'Init',
+                                            'valid':'Idle'})
+        smach.StateMachine.add('Init', init_concurrence, transitions={'continue':'Movement',
+                                                                      'stop':'Idle'})
+        smach.StateMachine.add('Movement', move_concurrence, transitions={'continue':'Movement',
+                                                                          'stop':'Idle'},
+                               remapping={'uid':'uid'})
+
+    return static_sm    
+                
+if __name__ == '__main__': 
+    rospy.init_node('torp_state_machine',log_level= rospy.DEBUG, sm, '/SM_ROOT')
+
+
+    server1 = torpedo_server.TorpedoServer('torpedo_action') 
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-#main method TODO: fix ctrl+C
-
-if __name__ == '__main__':
-    rospy.init_node('square_state_machine')
-    
-    server1 = initialize_server.InitializeServer('init_action')
-    server2 = move_server.MoveAction('square_action')
-    
     sm = create_machine()
- 
-    sis = smach_ros.IntrospectionServer('square_state_machine', sm, '/SM_ROOT')
-    sis.start  #taken from the threading method used in auv-2015 to avoid problems
-    smach_thread = Thread(target=lambda: sm.execute())
+
+    sis = smach_ros.IntrospectionServer('tropedo', sm, '/SM_ROOT') 
+    sis.start 
+    smach_thread = Thread(target=lambda: sm-execute())
     smach_thread.start()
 
-    #taken from auv-2015 to avoid the ctrl+c issue
     rospy.on_shutdown(sm.request_preempt)
-    sm.execute()
+    sm-execute()
     rospy.spin()
-    
-    
-    
+
     smach_thread.join()
     sis.stop()
-    
+        
+            
+

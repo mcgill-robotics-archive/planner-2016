@@ -13,12 +13,18 @@ class Initialize(smach.State):
         rospy.loginfo('initializing')
         rospy.sleep(10)
         if self.preempt_requested:
+<<<<<<< HEAD
             #self.service_preempt()
             return 'succeeded'
+=======
+            self.service_preempt()
+            return 'preempted'
+>>>>>>> create torpedo task
         return 'succeeded'
 
 class Move(smach.State):
     def __init__(self):
+<<<<<<< HEAD
         smach.State.__init__(self, outcomes=['done','preempted','notdone'],
                              input_keys=['uid'],
                              output_keys=['uid'])
@@ -28,6 +34,15 @@ class Move(smach.State):
         #if self.preempt_requested:
             #self.service_preempt()
             #return 'succeeded'
+=======
+        smach.State.__init__(self, outcomes=['succeeded','preempted','aborted','done','notdone'])
+    def execute(self,userdata):
+        rospy.loginfo('Moving')
+        rospy.sleep(10)
+        if self.preempt_requested:
+            self.service_preempt()
+            return 'preempted'
+>>>>>>> create torpedo task
         if userdata.uid==4:
             userdata.uid = 0
             return 'done'
@@ -37,6 +52,7 @@ class Move(smach.State):
         
 
 
+<<<<<<< HEAD
 def instastopper1(outcome_map):
     if outcome_map['Monitor'] == 'invalid' or outcome_map['Initialize']=='succeeded' :
         return True
@@ -72,10 +88,26 @@ def out_move_cb(outcome_map):
         return 'continue'
     else:
         return 'stop'
+=======
+def instastopper(outcome_map):
+    if outcome_map['Monitor'] == 'invalid':
+        return True
+    return False
+
+def out_cb(outcome_map):
+        return 'done'
+    
+def out_move_cb(outcome_map):
+    if outcome_map['Move'] == 'notdone':
+        return 'notdone'
+    else:
+        return 'done'
+>>>>>>> create torpedo task
     
     
 
 def monitor_cb(ud, msg):
+<<<<<<< HEAD
     rospy.loginfo('acting')
     return False
 
@@ -88,6 +120,15 @@ def create_machine():
     init_concurrence = smach.Concurrence(outcomes=['stop','continue'],
                                            default_outcome='continue',
                                            child_termination_cb=instastopper1,
+=======
+    return False
+
+def create_machine():
+    
+    init_concurrence = smach.Concurrence(outcomes=['succeeded','preempted'],
+                                           default_outcome='',
+                                           child_termination_cb=instastopper,
+>>>>>>> create torpedo task
                                            outcome_cb=out_cb)
     with init_concurrence:
         
@@ -101,17 +142,26 @@ def create_machine():
 
     static_sm = smach.StateMachine(outcomes=['done'])
 
+<<<<<<< HEAD
     move_concurrence = smach.Concurrence(outcomes=['stop','continue'],
                                            default_outcome='continue',
                                            input_keys=['uid'],
                                            output_keys=['uid'],
                                            child_termination_cb=instastopper2,
+=======
+    move_concurrence = smach.Concurrence(outcomes=['valid','invalid','preempted'],
+                                           default_outcome='valid',
+                                           input_keys=['uid'],
+                                           output_keys=['uid'],
+                                           child_termination_cb=instastopper,
+>>>>>>> create torpedo task
                                            outcome_cb=out_move_cb)
     with move_concurrence:
         smach.Concurrence.add('Move',
                                Move())
 
        
+<<<<<<< HEAD
         smach.Concurrence.add('Monitor', smach_ros.MonitorState("/sm_reset", Empty, monitor_cb))
 
 
@@ -121,6 +171,11 @@ def create_machine():
 
     with idle_concurrence:
         smach.Concurrence.add('Monitor', smach_ros.MonitorState("/sm_reset", Empty, monitor_cb)) 
+=======
+
+        smach.Concurrence.add('Monitor', smach_ros.MonitorState("/sm_reset", Empty, monitor_cb))
+
+>>>>>>> create torpedo task
 
         
     
@@ -129,6 +184,7 @@ def create_machine():
         #countdown1 = rospy.Time(10)
         static_sm.userdata.uid = 0 
         smach.StateMachine.add('Idle',
+<<<<<<< HEAD
                                idle_concurrence,
                                transitions={'invalid':'Init',
                                             'valid':'Idle'})
@@ -136,6 +192,18 @@ def create_machine():
                                                                       'stop':'Idle'})
         smach.StateMachine.add('Movement', move_concurrence, transitions={'continue':'Movement',
                                                                           'stop':'Idle'},
+=======
+                               smach_ros.MonitorState("/sm_reset", Empty, monitor_cb),
+                               transitions={'invalid':'Init',
+                                            'valid':'Idle',
+                                            'preempted':'Idle'})
+        smach.StateMachine.add('Init', init_concurrence, transitions={'valid':'Movement',
+                                                                      'invalid':'Idle',
+                                                                      'preempted':'Idle'})
+        smach.StateMachine.add('Movement', move_concurrence, transitions={'invalid':'Idle',
+                                                                          'valid':'Init',
+                                                                          'preempted':'Idle'},
+>>>>>>> create torpedo task
                                remapping={'uid':'uid'})
 
     return static_sm
@@ -184,7 +252,11 @@ if __name__ == '__main__':
 
     #taken from auv-2015 to avoid the ctrl+c issue
     rospy.on_shutdown(sm.request_preempt)
+<<<<<<< HEAD
     #sm.execute()
+=======
+    sm.execute()
+>>>>>>> create torpedo task
     rospy.spin()
     
     
