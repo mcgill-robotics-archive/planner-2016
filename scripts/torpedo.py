@@ -41,14 +41,15 @@ def fire_goal_cb(userdata,goal):
 ##  and returns the appropriate outcome.
 def fire_result_cb(userdata,status,result):
     rospy.loginfo("result")
+    result.fire_again = userdata.fire_again
     if status == GoalStatus.SUCCEEDED:
-        #if result.fire_again==False:
+        if result.fire_again==False:
             # What does uid do?
             #userdata.uid = 1
-        return 'done'
-        #else:
-        #    userdata.fire_again = False
-        #    return 'notdone'
+            return 'done'
+        else:
+            userdata.fire_again = False
+            return 'notdone'
 
 #gets called when the button sends a signal
 def monitor_cb_start(ud, msg):
@@ -86,6 +87,7 @@ def out_idle_cb(outcome_map):
 def out_torpedo_cb(outcome_map):
     rospy.sleep(3.5)
     rospy.loginfo("out_torpedo_cb")
+
     if outcome_map['Monitor'] == 'invalid' or outcome_map['Torpedo']=='done':
         return 'stop'
     elif outcome_map['Torpedo']=='notdone':
@@ -113,14 +115,14 @@ def create_machine():
                                            input_keys=['uid','fire_again'],
                                            output_keys=['uid','fire_again'],
                                            child_termination_cb=instastopper2,
-                                           #outcome_cb=out_torpedo_cb
+                                           outcome_cb=out_torpedo_cb
                                            )
     with torpedo_concurrence:
         smach.Concurrence.add('Torpedo',
                                 SimpleActionState('torpedo_action',
                                                torpedoAction,
-                                               #goal_cb=fire_goal_cb,
-                                               #result_cb=fire_result_cb,
+                                               goal_cb=fire_goal_cb,
+                                               result_cb=fire_result_cb,
                                                input_keys=['uid','fire_again'],
                                                output_keys=['uid','fire_again'],
                                                outcomes=['done','notdone', ]))

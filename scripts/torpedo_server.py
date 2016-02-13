@@ -13,7 +13,8 @@ class TorpedoServer(object):
     _result = torpedoResult()
 
     def __init__(self, name):
-
+        
+        rospy.loginfo("Server starting")
         self._action_name = name
 
         self._as = SimpleActionServer(self._action_name, torpedoAction, execute_cb=self.execute_cb, auto_start = False)
@@ -23,7 +24,7 @@ class TorpedoServer(object):
     def execute_cb(self,goal):
 
         #grab all the parameters
-
+        rospy.loginfo("execute_cb")
         success = True
         ti = int(goal.time.secs)
         ve = goal.velocity
