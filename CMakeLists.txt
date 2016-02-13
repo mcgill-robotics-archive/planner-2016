@@ -59,11 +59,7 @@ catkin_python_setup()
    FILES
    initialize.action
    move.action
-<<<<<<< HEAD
-   octogon.action
-=======
    torpedo.action
->>>>>>> create torpedo task
  )
 
 ## Generate added messages and services with any dependencies listed here
