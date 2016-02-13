@@ -41,6 +41,7 @@ def fire_goal_cb(userdata,goal):
 ##  and returns the appropriate outcome.
 def fire_result_cb(userdata,status,result):
     rospy.loginfo("result")
+<<<<<<< HEAD
     result.fire_again = userdata.fire_again
     if status == GoalStatus.SUCCEEDED:
         if result.fire_again==False:
@@ -50,6 +51,16 @@ def fire_result_cb(userdata,status,result):
         else:
             userdata.fire_again = False
             return 'notdone'
+=======
+    if status == GoalStatus.SUCCEEDED:
+        #if result.fire_again==False:
+            # What does uid do?
+            #userdata.uid = 1
+        return 'done'
+        #else:
+        #    userdata.fire_again = False
+        #    return 'notdone'
+>>>>>>> c330dd3dffa6dab10e685bff705b7f56a8abd6fb
 
 #gets called when the button sends a signal
 def monitor_cb_start(ud, msg):
@@ -87,7 +98,10 @@ def out_idle_cb(outcome_map):
 def out_torpedo_cb(outcome_map):
     rospy.sleep(3.5)
     rospy.loginfo("out_torpedo_cb")
+<<<<<<< HEAD
 
+=======
+>>>>>>> c330dd3dffa6dab10e685bff705b7f56a8abd6fb
     if outcome_map['Monitor'] == 'invalid' or outcome_map['Torpedo']=='done':
         return 'stop'
     elif outcome_map['Torpedo']=='notdone':
@@ -115,14 +129,23 @@ def create_machine():
                                            input_keys=['uid','fire_again'],
                                            output_keys=['uid','fire_again'],
                                            child_termination_cb=instastopper2,
+<<<<<<< HEAD
                                            outcome_cb=out_torpedo_cb
+=======
+                                           #outcome_cb=out_torpedo_cb
+>>>>>>> c330dd3dffa6dab10e685bff705b7f56a8abd6fb
                                            )
     with torpedo_concurrence:
         smach.Concurrence.add('Torpedo',
                                 SimpleActionState('torpedo_action',
                                                torpedoAction,
+<<<<<<< HEAD
                                                goal_cb=fire_goal_cb,
                                                result_cb=fire_result_cb,
+=======
+                                               #goal_cb=fire_goal_cb,
+                                               #result_cb=fire_result_cb,
+>>>>>>> c330dd3dffa6dab10e685bff705b7f56a8abd6fb
                                                input_keys=['uid','fire_again'],
                                                output_keys=['uid','fire_again'],
                                                outcomes=['done','notdone', ]))
