@@ -13,12 +13,8 @@ class TorpedoServer(object):
     _result = torpedoResult()
 
     def __init__(self, name):
-<<<<<<< HEAD
-        
-        rospy.loginfo("Server starting")
-=======
 
->>>>>>> c330dd3dffa6dab10e685bff705b7f56a8abd6fb
+        rospy.loginfo("server started")
         self._action_name = name
 
         self._as = SimpleActionServer(self._action_name, torpedoAction, execute_cb=self.execute_cb, auto_start = False)
@@ -26,13 +22,10 @@ class TorpedoServer(object):
         self._as.start()
 
     def execute_cb(self,goal):
+        rospy.loginfo("Server execute_cb")
 
         #grab all the parameters
-<<<<<<< HEAD
-        rospy.loginfo("execute_cb")
-=======
 
->>>>>>> c330dd3dffa6dab10e685bff705b7f56a8abd6fb
         success = True
         ti = int(goal.time.secs)
         ve = goal.velocity
@@ -58,8 +51,6 @@ class TorpedoServer(object):
 
 
             #random move calculations TODO: calculations that actually make sense
-             #de = de-ve.linear.z
-             #th = th-ve.angular.z
 
              self._feedback.time_left = rospy.Time().from_sec(ti)
 
@@ -75,10 +66,11 @@ class TorpedoServer(object):
 
              rospy.Rate(1).sleep
 
-      #what to send after succesfully moving
+      # What to send after succesfully moving
 
         if success:
 
+            rospy.loginfo("Server recieved sucess on fire action")
             # Random logic to state whether we need to fire again or not
             fireagain = random.randrange(0,2)
             if ( fireagain == 1):
