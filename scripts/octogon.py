@@ -81,16 +81,45 @@ def create_machine():
                                                   result_cb=grab_result_cb,
                                                   input_keys=['doubloon'],
                                                   output_keys=['doubloon'],
-                                                  outcomes=['done','notdone']))
+                                                  outcomes=['done','notdone']),
+                                                  transitions={'done' :
+                                                  'Surfacing', 'notdone' : 
+                                                  'Grab'}
+                                                  remapping ={'doubloon' : 
+                                                  'doubloon' : 'doubloon'}
 
-       smach.Concurrence.add('Octogon',
+       smach.Concurrence.add('Surfacing',
                                    SimpleActionState('surface_action',
                                                   surfaceAction,
                                                   goal_cb=surface_goal_cb,
                                                   result_cb=surface_result_cb,
                                                   input_keys=['retrying'],
                                                   output_keys=['retrying'],
-                                                  outcomes=['done','notdone']))
+                                                  outcomes=['done','notdone'])
+                                                  transitions={'done':'Table',
+                                                  'notdone' : 'Surfacing'
+                                                  remapping={'retrying': 
+                                                  'retrying'})
+                                                  
+
+   
+	smach.Concurrence.add('Table',
+                                   SimpleActionState('surface_action',
+                                                  surfaceAction,
+                                                  goal_cb=surface_goal_cb,
+                                                  result_cb=surface_result_cb,
+						  input_keys=['retrying','
+						  doubloon'],
+                                                  output_keys=['doubloon'
+                                                  'retrying'],
+                                                  outcomes=['obj1placed',
+                                                  'obj2placed',
+                                                  'notdone'])
+						  transitions={'obj1placed' :
+                                                  'grab',obj }, 
+						  remapping={'retrying': 
+						  'retrying', 'doubloon' : 
+						  'doubloon'}
 
 
 
