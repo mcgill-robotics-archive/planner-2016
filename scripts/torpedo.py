@@ -14,7 +14,7 @@ from actionlib_msgs.msg import *
 import initialize_server,move_server,torpedo_server
 from smach_ros import SimpleActionState
 
-
+#comment
 ## Grabs the goal from the parameter server
 def fire_goal_cb(userdata,goal):
     rospy.loginfo("fire_goal_cb")
