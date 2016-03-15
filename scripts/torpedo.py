@@ -18,6 +18,7 @@ from smach_ros import SimpleActionState
 ## Grabs the goal from the parameter server
 def fire_goal_cb(userdata,goal):
     rospy.loginfo("fire_goal_cb")
+    rospy.loginfo("random comment")
 
     counter = userdata.uid
 
