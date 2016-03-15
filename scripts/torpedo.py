@@ -122,7 +122,7 @@ def create_machine():
 
 ################################################################################
 
-    #container for idle. It's a single monitor state, but is in a container to allow delays (to avoid concurrency problems)
+    # container for idle. It's a single monitor state, but is in a container to allow delays (to avoid concurrency problems)
     idle_concurrence=smach.Concurrence(outcomes=['valid','invalid'],
                                        default_outcome='valid',
                                        outcome_cb=out_idle_cb)
