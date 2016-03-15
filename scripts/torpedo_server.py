@@ -70,7 +70,7 @@ class TorpedoServer(object):
 
         if success:
 
-            rospy.loginfo("Server recieved sucess on fire action")
+            rospy.loginfo("Server recieved success on fire action")
             # Random logic to state whether we need to fire again or not
             fireagain = random.randrange(0,2)
             if ( fireagain == 1):

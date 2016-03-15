@@ -1,6 +1,32 @@
+initialize:
+  seconds: 10
+  milliseconds: 0
 move_type:
-  - move_name: move1
-    x        : 1
-    y        : 2
-    z        : 3
+  - move: first
+    time:
+          seconds : 10
+          milliseconds : 0
+    velocity:
+              Pose:
+                    x: 1
+                    y: 2
+                    z: 3
 
+  - move: second
+    time:
+          seconds : 10
+          milliseconds : 0
+    velocity:
+              Pose:
+                    x: 1
+                    y: 2
+                    z: 3
+  - move: third
+    time:
+          seconds : 10
+          milliseconds : 0
+    velocity:
+              Pose:
+                    x: 1
+                    y: 2
+                    z: 3

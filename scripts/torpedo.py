@@ -22,9 +22,11 @@ def fire_goal_cb(userdata,goal):
 
     counter = userdata.uid
 
-    params = rospy.get_param('~/torpedo'+str(counter))
+    params = rospy.get_param(uid)
+    rospy.loginfo("hasn't crashed yet")
+
     rospy.loginfo(params)
-    rospy.loginfo("WHAT")
+
     time_ = rospy.Time(params['time'][0],params['time'][1])
     velocity = Twist(Vector3(params['velocity'][0],params['velocity'][1],params['velocity'][2]),Vector3(params['velocity'][3],params['velocity'][4],params['velocity'][5]))
 
@@ -107,12 +109,12 @@ def create_machine():
                                            )
     with torpedo_concurrence:
         smach.Concurrence.add('Torpedo',
-                                    SimpleActionState('fire_action',
+                                    SimpleActionState('torpedo_action',
                                         torpedoAction,
                                         goal_cb=fire_goal_cb,
                                         result_cb=fire_result_cb,
-                                        input_keys=['fire_again'],
-                                        output_keys=['fire_again'],
+                                        input_keys=['fire_again','uid'],
+                                        output_keys=['fire_again','uid'],
                                         outcomes=['done','notdone']
                                     ),
                                     remapping={"torpedo":"torpedo"},
@@ -144,7 +146,7 @@ def create_machine():
                                             'valid':'Idle'})
         smach.StateMachine.add('Torpedo', torpedo_concurrence, transitions={'notdone':'Torpedo',
                                                                           'done':'Idle'},
-                                                                          remapping={'fire_again':'fire_again'})
+                                                                          remapping={'fire_again':'fire_again', 'uid':'uid'})
 
         return static_sm
 
@@ -156,7 +158,8 @@ def create_machine():
 
 
 if __name__ == '__main__':
-    rospy.init_node('torpedo_state_machine')
+
+    rospy.init_node('static_state_machine')
 
     server1 = torpedo_server.TorpedoServer('torpedo_action')
 
