@@ -1,0 +1,186 @@
+everything:
+
+  initialize:
+    seconds: 10
+    milliseconds: 0
+  pathmarkers:
+
+
+    - move: first
+      name: 'Path Markers'
+      timeout: 60
+      time:
+            seconds : 10
+            milliseconds : 0
+      velocity:
+                Pose:
+                      x: 1
+                      y: 2
+                      z: 3
+                Twist:
+                      x: 1
+                      y: 2
+                      z: 3
+                Theta: 2
+                Depth: 2
+
+
+  scuttleship:
+
+    - move: first
+      timeout: 60
+      name: 'Buoys'
+      time:
+            seconds : 10
+            milliseconds : 0
+      velocity:
+                Pose:
+                      x: 1
+                      y: 2
+                      z: 3
+                Twist:
+                      x: 1
+                      y: 2
+                      z: 3
+                Theta: 2
+                Depth: 2
+
+  navigatechannel:
+
+    - move: first
+      timeout: 60
+      name: 'Channel'
+      time:
+            seconds : 10
+            milliseconds : 0
+      velocity:
+                Pose:
+                      x: 1
+                      y: 2
+                      z: 3
+                Twist:
+                      x: 1
+                      y: 2
+                      z: 3
+                Theta: 2
+                Depth: 2
+
+  anchorbins:
+
+    -anchor:
+      timeout: 60
+      name: 'Bins'
+      time:
+            seconds : 10
+            milliseconds : 0
+      velocity:
+                Pose:
+                      x: 1
+                      y: 2
+                      z: 3
+                Twist:
+                      x: 1
+                      y: 2
+                      z: 3
+                Theta: 2
+                Depth: 2
+      claw: true
+
+    -anchor:
+      timeout: 60
+      name: 'Bins'
+      time:
+            seconds : 10
+            milliseconds : 0
+      velocity:
+                Pose:
+                      x: 1
+                      y: 2
+                      z: 3
+                Twist:
+                      x: 1
+                      y: 2
+                      z: 3
+                Theta: 2
+                Depth: 2
+      claw: true
+
+
+
+  torpedoes:
+    -torpedo:
+      timeout: 60
+      name: 'Torpedo'
+      time:
+            seconds : 10
+            milliseconds : 0
+      velocity:
+                Pose:
+                      x: 1
+                      y: 2
+                      z: 3
+                Twist:
+                      x: 1
+                      y: 2
+                      z: 3
+                Theta: 2
+                Depth: 2
+      firing: true
+
+
+  treasure:
+
+
+    - move: first
+      name: 'Pick up'
+      timeout: 60
+      time:
+            seconds : 10
+            milliseconds : 0
+      velocity:
+                Pose:
+                      x: 1
+                      y: 2
+                      z: 3
+                Twist:
+                      x: 1
+                      y: 2
+                      z: 3
+                Theta: 2
+                Depth: 2
+
+    - move: second
+      name: 'Octogon'
+      timeout: 60
+      time:
+            seconds : 10
+            milliseconds : 0
+      velocity:
+                Pose:
+                      x: 1
+                      y: 2
+                      z: 3
+                Twist:
+                      x: 1
+                      y: 2
+                      z: 3
+                Theta: 2
+                Depth: 2
+
+    - move: third
+      name: 'Table'
+      timeout: 60
+      time:
+            seconds : 10
+            milliseconds : 0
+      velocity:
+                Pose:
+                      x: 1
+                      y: 2
+                      z: 3
+                Twist:
+                      x: 1
+                      y: 2
+                      z: 3
+                Theta: 2
+                Depth: 2
