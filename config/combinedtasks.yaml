@@ -6,7 +6,7 @@ everything:
   pathmarkers:
 
 
-    - move: first
+
       name: 'Path Markers'
       timeout: 60
       time:
@@ -27,7 +27,7 @@ everything:
 
   scuttleship:
 
-    - move: first
+
       timeout: 60
       name: 'Buoys'
       time:
@@ -47,7 +47,7 @@ everything:
 
   navigatechannel:
 
-    - move: first
+
       timeout: 60
       name: 'Channel'
       time:
@@ -149,6 +149,8 @@ everything:
                 Theta: 2
                 Depth: 2
 
+      claw: true
+
     - move: second
       name: 'Octogon'
       timeout: 60
@@ -184,3 +186,5 @@ everything:
                       z: 3
                 Theta: 2
                 Depth: 2
+
+      claw: true
