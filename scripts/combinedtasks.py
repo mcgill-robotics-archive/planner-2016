@@ -329,7 +329,7 @@ def create_machine():
                                                                           remapping={'uid':'uid'})
         for keys in params.torpedoes:
 
-        smach.StateMachine.add(keys.name, torpedo_concurrence, transitions={'notdone':keys.name,
+            smach.StateMachine.add(keys.name, torpedo_concurrence, transitions={'notdone':keys.name,
                                                                           'done':'Idle'},
                                                                           remapping={'fire_again':'fire_again', 'uid':'uid'})
 

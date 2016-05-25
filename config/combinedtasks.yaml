@@ -67,43 +67,43 @@ everything:
 
   anchorbins:
 
-    -anchor:
-      timeout: 60
-      name: 'Bins'
-      time:
-            seconds : 10
-            milliseconds : 0
-      velocity:
-                Pose:
-                      x: 1
-                      y: 2
-                      z: 3
-                Twist:
-                      x: 1
-                      y: 2
-                      z: 3
-                Theta: 2
-                Depth: 2
-      claw: true
+      -anchor:
+        timeout: 60
+        name: 'Bins'
+        time:
+              seconds : 10
+              milliseconds : 0
+        velocity:
+                  Pose:
+                        x: 1
+                        y: 2
+                        z: 3
+                  Twist:
+                        x: 1
+                        y: 2
+                        z: 3
+                  Theta: 2
+                  Depth: 2
+        claw: true
 
-    -anchor:
-      timeout: 60
-      name: 'Bins'
-      time:
-            seconds : 10
-            milliseconds : 0
-      velocity:
-                Pose:
-                      x: 1
-                      y: 2
-                      z: 3
-                Twist:
-                      x: 1
-                      y: 2
-                      z: 3
-                Theta: 2
-                Depth: 2
-      claw: true
+      -anchor:
+        timeout: 60
+        name: 'Bins'
+        time:
+              seconds : 10
+              milliseconds : 0
+        velocity:
+                  Pose:
+                        x: 1
+                        y: 2
+                        z: 3
+                  Twist:
+                        x: 1
+                        y: 2
+                        z: 3
+                  Theta: 2
+                  Depth: 2
+        claw: true
 
 
 
@@ -129,62 +129,61 @@ everything:
 
 
   treasure:
+     -move:
+          name: 'Pick up'
+          timeout: 60
+          time:
+                seconds : 10
+                milliseconds : 0
+          velocity:
+                    Pose:
+                          x: 1
+                          y: 2
+                          z: 3
+                    Twist:
+                          x: 1
+                          y: 2
+                          z: 3
+                    Theta: 2
+                    Depth: 2
+
+          claw: true
+
+     -move:
+          name: 'Octogon'
+          timeout: 60
+          time:
+                seconds : 10
+                milliseconds : 0
+          velocity:
+                    Pose:
+                          x: 1
+                          y: 2
+                          z: 3
+                    Twist:
+                          x: 1
+                          y: 2
+                          z: 3
+                    Theta: 2
+                    Depth: 2
 
 
-    - move: first
-      name: 'Pick up'
-      timeout: 60
-      time:
-            seconds : 10
-            milliseconds : 0
-      velocity:
-                Pose:
-                      x: 1
-                      y: 2
-                      z: 3
-                Twist:
-                      x: 1
-                      y: 2
-                      z: 3
-                Theta: 2
-                Depth: 2
+     -move:
+            name: 'Table'
+            timeout: 60
+            time:
+                  seconds : 10
+                  milliseconds : 0
+            velocity:
+                      Pose:
+                            x: 1
+                            y: 2
+                            z: 3
+                      Twist:
+                            x: 1
+                            y: 2
+                            z: 3
+                      Theta: 2
+                      Depth: 2
 
-      claw: true
-
-    - move: second
-      name: 'Octogon'
-      timeout: 60
-      time:
-            seconds : 10
-            milliseconds : 0
-      velocity:
-                Pose:
-                      x: 1
-                      y: 2
-                      z: 3
-                Twist:
-                      x: 1
-                      y: 2
-                      z: 3
-                Theta: 2
-                Depth: 2
-
-    - move: third
-      name: 'Table'
-      timeout: 60
-      time:
-            seconds : 10
-            milliseconds : 0
-      velocity:
-                Pose:
-                      x: 1
-                      y: 2
-                      z: 3
-                Twist:
-                      x: 1
-                      y: 2
-                      z: 3
-                Theta: 2
-                Depth: 2
-
-      claw: true
+            claw: true
