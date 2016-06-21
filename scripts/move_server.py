@@ -8,7 +8,7 @@ from geometry_msgs.msg import *
 
 class MoveAction(object):
    #setup the move server
-  
+
    _feedback = moveFeedback()
    _result   = moveResult()
    def __init__(self, name):
@@ -18,7 +18,7 @@ class MoveAction(object):
 
    def execute_cb(self,goal):
       #grab all the parameters
-      
+
        success = True
        ti = int(goal.time.secs)
        ve = goal.velocity
@@ -49,11 +49,3 @@ class MoveAction(object):
            self._result.success = True
            rospy.loginfo('%s: Succeeded' % self._action_name)
            self._as.set_succeeded(self._result)
-                
-             
-            
-
-       
-
-       
-
