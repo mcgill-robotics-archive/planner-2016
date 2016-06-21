@@ -17,7 +17,8 @@ import move_server
 '''The following callbacks send and receive info from action servers within taskr'''
 def move_goal_cb(userdata,goal):
     counter = userdata.uid
-
+    check = rospy.get_param('~/everything/treasure')
+    rospy.loginfo(check)
     time_params = rospy.get_param('~/everything/pathmarkers/time')
     vel_params = rospy.get_param('~/everything/pathmarkers/velocity')
     pose = vel_params['Pose']
@@ -27,7 +28,7 @@ def move_goal_cb(userdata,goal):
     time_ = rospy.Time(time_params['seconds'],time_params['milliseconds'])
     velocity = Twist(Vector3(pose['x'],pose['y'],pose['z']),
                      Vector3(twist['x'],twist['y'],twist['z']))
-    move_goal = moveGoal(time_,velocity,vel_params['theta'],vel_params['depth'])
+    move_goal = moveGoal(time_,velocity,vel_params['Theta'],vel_params['Depth'])
     userdata.uid += 1
     return move_goal
 
@@ -340,14 +341,15 @@ def create_machine():
 
     with static_sm:
 
+        pathmarkers = rospy.get_param('~/everything/pathmarkers')
         smach.StateMachine.add('Idle',
                                idle_concurrence,
                                transitions={'invalid': 'Movement',
                                             'valid': 'Idle'})
-
-        smach.StateMachine.add('Movement', move_concurrence, transitions={'continue': 'Movement',
+        for keys in pathmarkers:
+            smach.StateMachine.add('Movement'+str(pathmarkers['keys']['name']), move_concurrence, transitions={'continue': 'Movement',
                                                                           'stop': 'Idle'},
-                               remapping={'uid': 'uid'})
+                                                                          remapping={'uid': 'uid'})
 
         # for keys in params.anchorbins:
         #

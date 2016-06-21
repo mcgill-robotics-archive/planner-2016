@@ -75,7 +75,7 @@ everything:
               milliseconds : 0
         velocity:
                   Pose:
-                        x: 1
+                        x: 2
                         y: 2
                         z: 3
                   Twist:
@@ -149,7 +149,7 @@ everything:
 
           claw: true
 
-     -move:
+     -octo:
           name: 'Octogon'
           timeout: 60
           time:
@@ -168,7 +168,7 @@ everything:
                     Depth: 2
 
 
-     -move:
+     -table:
             name: 'Table'
             timeout: 60
             time:
