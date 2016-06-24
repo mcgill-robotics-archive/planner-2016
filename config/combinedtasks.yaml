@@ -1,189 +1,41 @@
 everything:
 
   initialize:
+    name: 'Initialize'
     seconds: 10
     milliseconds: 0
+
+  gate:
+      name: 'Gate'
+      timeout: 60
+
   pathmarkers:
-
-
-
       name: 'Path Markers'
       timeout: 60
-      time:
-            seconds : 10
-            milliseconds : 0
-      velocity:
-                Pose:
-                      x: 1
-                      y: 2
-                      z: 3
-                Twist:
-                      x: 1
-                      y: 2
-                      z: 3
-                Theta: 2
-                Depth: 2
 
 
-  scuttleship:
-
-
+  buoys:
       timeout: 60
       name: 'Buoys'
-      time:
-            seconds : 10
-            milliseconds : 0
-      velocity:
-                Pose:
-                      x: 1
-                      y: 2
-                      z: 3
-                Twist:
-                      x: 1
-                      y: 2
-                      z: 3
-                Theta: 2
-                Depth: 2
-
-  navigatechannel:
 
 
+  maneuver:
       timeout: 60
-      name: 'Channel'
-      time:
-            seconds : 10
-            milliseconds : 0
-      velocity:
-                Pose:
-                      x: 1
-                      y: 2
-                      z: 3
-                Twist:
-                      x: 1
-                      y: 2
-                      z: 3
-                Theta: 2
-                Depth: 2
+      name: 'Maneuver'
 
-  anchorbins:
-
-      -anchor:
-        timeout: 60
-        name: 'Bins'
-        time:
-              seconds : 10
-              milliseconds : 0
-        velocity:
-                  Pose:
-                        x: 2
-                        y: 2
-                        z: 3
-                  Twist:
-                        x: 1
-                        y: 2
-                        z: 3
-                  Theta: 2
-                  Depth: 2
-        claw: true
-
-      -anchor:
-        timeout: 60
-        name: 'Bins'
-        time:
-              seconds : 10
-              milliseconds : 0
-        velocity:
-                  Pose:
-                        x: 1
-                        y: 2
-                        z: 3
-                  Twist:
-                        x: 1
-                        y: 2
-                        z: 3
-                  Theta: 2
-                  Depth: 2
-        claw: true
+  bins:
+      timeout: 60
+      name: 'Bins'
 
 
 
-  torpedoes:
-    -torpedo:
+  torpedo:
       timeout: 60
       name: 'Torpedo'
-      time:
-            seconds : 10
-            milliseconds : 0
-      velocity:
-                Pose:
-                      x: 1
-                      y: 2
-                      z: 3
-                Twist:
-                      x: 1
-                      y: 2
-                      z: 3
-                Theta: 2
-                Depth: 2
-      firing: true
 
+  octagon:
+         name: 'Octagon'
+         timeout: 60
 
-  treasure:
-     -move:
-          name: 'Pick up'
-          timeout: 60
-          time:
-                seconds : 10
-                milliseconds : 0
-          velocity:
-                    Pose:
-                          x: 1
-                          y: 2
-                          z: 3
-                    Twist:
-                          x: 1
-                          y: 2
-                          z: 3
-                    Theta: 2
-                    Depth: 2
-
-          claw: true
-
-     -octo:
-          name: 'Octogon'
-          timeout: 60
-          time:
-                seconds : 10
-                milliseconds : 0
-          velocity:
-                    Pose:
-                          x: 1
-                          y: 2
-                          z: 3
-                    Twist:
-                          x: 1
-                          y: 2
-                          z: 3
-                    Theta: 2
-                    Depth: 2
-
-
-     -table:
-            name: 'Table'
-            timeout: 60
-            time:
-                  seconds : 10
-                  milliseconds : 0
-            velocity:
-                      Pose:
-                            x: 1
-                            y: 2
-                            z: 3
-                      Twist:
-                            x: 1
-                            y: 2
-                            z: 3
-                      Theta: 2
-                      Depth: 2
-
-            claw: true
+  square:
+      name: 'Square'
