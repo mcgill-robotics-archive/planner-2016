@@ -1,5 +1,5 @@
 <launch>
-    <node name="planner" pkg="planner" type="static_state_machine" >
+    <node name="planner" pkg="planner" type="planner_all" >
     </node>
      <rosparam file="$(find planner)/config/combinedtasks.yaml" />
 </launch>
