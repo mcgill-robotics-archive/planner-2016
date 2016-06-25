@@ -4,7 +4,7 @@ import smach_ros
 import rospy
 from threading import Thread
 from planner import *
-from planner.msg import *
+from planner.msg import taskGoal, taskAction
 from smach_ros import SimpleActionState
 
 from actionlib import *
@@ -12,32 +12,22 @@ from actionlib_msgs.msg import *
 from std_msgs.msg import Bool
 from geometry_msgs.msg import *
 
-import move_server
+import task_server
 
-'''The following callbacks send and receive info from action servers within taskr'''
-def move_goal_cb(userdata,goal):
-    name_param = rospy.get_param('~/everything/{}/name'.format(userdata.uid))
-    return move_goal
+'''This stops everything (set back to idle) when  the kill switch triggers'''
 
 
-def move_result_cb(userdata,status,goal):
-    if status == GoalStatus.SUCCEEDED:
-            return 'done'
-        else:
-            return 'notdone'
-
-
-
-'''This stops everything (set back to idle) when the kill switch triggers'''
 def instastopper2(outcome_map):
-    if outcome_map['Monitor'] == 'invalid' or outcome_map['Move']=='done' or outcome_map['Move']=='notdone':
+    if outcome_map['Monitor'] == 'invalid' or outcome_map['Movement'] == 'succeeded' or outcome_map['Movement']=='preempted' or outcome_map['Movement'] == 'aborted':
         return True
     return False
 
 '''These 2 callbacks define the behavior of the monitors, what happens when they receive
 a particular signal on the topic they are monitoring'''
+
+
 def monitor_cb_start(ud, msg):
-    if msg.data == True:
+    if msg.data is True:
         rospy.loginfo('Starting!!')
         return False
     else:
@@ -51,12 +41,6 @@ def monitor_cb_stop(ud, msg):
     else:
         return True
 
-
-
-
-
-
-
 '''What happens when idle and move states finish'''
 def out_idle_cb(outcome_map):
     rospy.sleep(3.5)
@@ -66,74 +50,43 @@ def out_idle_cb(outcome_map):
         return 'valid'
 
 
-def out_move_cb(outcome_map):
+def out_task_cb(outcome_map):
     rospy.sleep(3.5)
-    if outcome_map['Monitor'] == 'invalid' or outcome_map['Move'] == 'done':
-        return 'stop'
-    elif outcome_map['Move'] == 'notdone':
-        return 'continue'
-    else:
-        return 'stop'
-
-
+    return 'succeeded'
 
 task_dict = {}
 
 for tasks in rospy.get_param('~/everything'):
-    task_name = str(tasks['name'])
-    task_dict­[task_name] = SimpleActionState(­"{}_action".format(task_name),
-                                            moveAction,
-                                            goal_cb=move_goal_cb,
-                                            result_cb=move_result_cb,
-                                            input_keys=['uid'],
-                                            output_keys=['uid'],
-                                            outcomes=['done', 'notdone'])
+    task_name = tasks[0]
+    task_dict[task_name] = SimpleActionState('{}_action'.format(task_name),
+                                             taskAction,
+                                             goal=taskGoal(name=task_name),
+                                             outcomes=['succeeded', 'preempted', 'aborted'])
 
 def create_machine():
 
-
-    static_sm = smach.StateMachine(outcomes=['succeeded','preempted', 'aborted'])
-
+    static_sm = smach.StateMachine(outcomes=['succeeded', 'preempted', 'aborted'])
 
     static_sm.userdata.uid = 1
     seq = smach.Sequence(
-                    outcomes = ['done','notdone']
-                    connector_outcome = 'done'
-    )
+                    outcomes=['succeeded', 'preempted', 'aborted'],
+                    connector_outcome='succeeded')
 
     with seq:
         task_list = rospy.get_param('~/everything')
         for tasks in task_list:
-            task_name = str(tasks['name'])
+            task_name = tasks[0]
             smach.Sequence.add(task_name,task_dict[task_name])
 
-    execution_concurrence = smach.Concurrence(outcomes=['stop','continue'],
-                                          default_outcome='continue',
-                                          input_keys=['uid'],
-                                          output_keys=['uid'],
-                                          child_termination_cb=instastopper2,
-                                          outcome_cb=out_move_cb)
+    execution_concurrence = smach.Concurrence(outcomes=['stop', 'continue'],
+                                              default_outcome='continue',
+                                              child_termination_cb=instastopper2,
+                                              outcome_cb=out_task_cb)
     with execution_concurrence:
-       smach.Concurrence.add('Move',
-                               seq)
+        smach.Concurrence.add('Movement',
+                              seq)
 
-
-       smach.Concurrence.add('Monitor', smach_ros.MonitorState("/sm_reset", Bool, monitor_cb_stop))
-
-
-    init_concurrence = smach.Concurrence(outcomes=['stop','continue'],
-                                           default_outcome='continue',
-                                           child_termination_cb=instastopper1,
-                                           outcome_cb=out_init_cb)
-    with init_concurrence:
-
-        paraminit = rospy.get_param('~/everything/initialize')
-        countdown1 = rospy.Time(paraminit[0], paraminit[1])
-
-        smach.Concurrence.add('Initialize',
-                               SimpleActionState('init_action',
-                                               initializeAction,
-                                               goal=initializeGoal(countdown=countdown1)))
+        smach.Concurrence.add('Monitor', smach_ros.MonitorState("/sm_reset", Bool, monitor_cb_stop))
 
     idle_concurrence = smach.Concurrence(outcomes=['valid', 'invalid'],
                                          default_outcome='valid',
@@ -151,21 +104,17 @@ def create_machine():
         smach.StateMachine.add('Init', init_concurrence, transitions={'continue':'Movement',
                                                                       'stop':'Idle'})
         smach.StateMachine.add('Movement', execution_concurrence, transitions={'succeeded':'Idle',
-                                                                      'preempted':'Idle',
-                                                                      'aborted':'Idle'})
+                                                                               'preempted':'Idle',
+                                                                               'aborted':'Idle'})
 
     return static_sm
 
-def create_server(task):
-    server = taskr.MoveAction('{}_action'.format(task))
-    return server
 
 if __name__ == '__main__':
+
     rospy.init_node('square_state_machine')
-
-
-    for tasks in rospy.get_param('~/everything'):
-        create_server(str(tasks['name']))
+    rospy.loginfo('hey')
+    server = task_server.TaskAction('task_action')
 
     sm = create_machine()
 

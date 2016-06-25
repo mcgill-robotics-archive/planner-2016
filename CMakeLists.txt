@@ -60,6 +60,7 @@ catkin_python_setup()
    initialize.action
    move.action
    octogon.action
+   task.action
  )
 
 ## Generate added messages and services with any dependencies listed here
