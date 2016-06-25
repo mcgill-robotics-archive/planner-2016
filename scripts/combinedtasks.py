@@ -56,7 +56,7 @@ def out_task_cb(outcome_map):
 
 task_dict = {}
 
-for tasks in rospy.get_param('~/everything'):
+for tasks in rospy.get_param('~/tasks'):
     task_name = tasks[0]
     task_dict[task_name] = SimpleActionState('{}_action'.format(task_name),
                                              taskAction,
@@ -73,7 +73,7 @@ def create_machine():
                     connector_outcome='succeeded')
 
     with seq:
-        task_list = rospy.get_param('~/everything')
+        task_list = rospy.get_param('~/tasks')
         for tasks in task_list:
             task_name = tasks[0]
             smach.Sequence.add(task_name,task_dict[task_name])
@@ -113,7 +113,6 @@ def create_machine():
 if __name__ == '__main__':
 
     rospy.init_node('square_state_machine')
-    rospy.loginfo('hey')
     server = task_server.TaskAction('task_action')
 
     sm = create_machine()

@@ -1,41 +1,36 @@
-everything:
+tasks:
 
-  initialize:
+  -initialize:
     name: 'Initialize'
     seconds: 10
     milliseconds: 0
 
-  gate:
+  -gate:
       name: 'Gate'
       timeout: 60
 
-  pathmarkers:
-      name: 'Path Markers'
-      timeout: 60
-
-
-  buoys:
+  -buoys:
       timeout: 60
       name: 'Buoys'
 
 
-  maneuver:
+  -maneuver:
       timeout: 60
       name: 'Maneuver'
 
-  bins:
+  -bins:
       timeout: 60
       name: 'Bins'
 
 
 
-  torpedo:
+  -torpedo:
       timeout: 60
       name: 'Torpedo'
 
-  octagon:
+  -octagon:
          name: 'Octagon'
          timeout: 60
 
-  square:
+  -square:
       name: 'Square'
