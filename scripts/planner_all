@@ -43,7 +43,7 @@ def monitor_cb_stop(ud, msg):
 
 '''What happens when idle and move states finish'''
 def out_idle_cb(outcome_map):
-    rospy.sleep(3.5)
+    rospy.sleep(5)
     if outcome_map['Monitor'] == 'invalid':
         return 'invalid'
     else:
@@ -54,20 +54,11 @@ def out_task_cb(outcome_map):
     rospy.sleep(3.5)
     return 'succeeded'
 
-task_dict = {}
-
-for tasks in rospy.get_param('~/tasks'):
-    task_name = tasks[0]
-    task_dict[task_name] = SimpleActionState('{}_action'.format(task_name),
-                                             taskAction,
-                                             goal=taskGoal(name=task_name),
-                                             outcomes=['succeeded', 'preempted', 'aborted'])
 
 def create_machine():
 
     static_sm = smach.StateMachine(outcomes=['succeeded', 'preempted', 'aborted'])
 
-    static_sm.userdata.uid = 1
     seq = smach.Sequence(
                     outcomes=['succeeded', 'preempted', 'aborted'],
                     connector_outcome='succeeded')
@@ -75,16 +66,18 @@ def create_machine():
     with seq:
         task_list = rospy.get_param('~/tasks')
         for tasks in task_list:
-            task_name = tasks[0]
-            smach.Sequence.add(task_name,task_dict[task_name])
+            task_name = tasks[1:]
+            rospy.loginfo(task_name)
+            smach.Sequence.add(task_name, SimpleActionState('task_action',
+                                                            taskAction,
+                                                            goal=taskGoal(name=task_name)))
 
-    execution_concurrence = smach.Concurrence(outcomes=['stop', 'continue'],
-                                              default_outcome='continue',
+    execution_concurrence = smach.Concurrence(outcomes=['succeeded','preempted','aborted'],
+                                              default_outcome='succeeded',
                                               child_termination_cb=instastopper2,
                                               outcome_cb=out_task_cb)
     with execution_concurrence:
-        smach.Concurrence.add('Movement',
-                              seq)
+        smach.Concurrence.add('Movement', seq)
 
         smach.Concurrence.add('Monitor', smach_ros.MonitorState("/sm_reset", Bool, monitor_cb_stop))
 
@@ -101,8 +94,7 @@ def create_machine():
                                idle_concurrence,
                                transitions={'invalid': 'Movement',
                                             'valid': 'Idle'})
-        smach.StateMachine.add('Init', init_concurrence, transitions={'continue':'Movement',
-                                                                      'stop':'Idle'})
+
         smach.StateMachine.add('Movement', execution_concurrence, transitions={'succeeded':'Idle',
                                                                                'preempted':'Idle',
                                                                                'aborted':'Idle'})
