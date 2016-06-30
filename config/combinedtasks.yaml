@@ -1,36 +1,26 @@
 tasks:
 
-  -initialize:
-    name: 'Initialize'
-    seconds: 10
-    milliseconds: 0
+    -initialize:
+      name: 'Initialize'
 
-  -gate:
-      name: 'Gate'
-      timeout: 60
+    -gate:
+        name: 'Gate'
 
-  -buoys:
-      timeout: 60
-      name: 'Buoys'
+    -buoys:
+        name: 'Buoys'
 
 
-  -maneuver:
-      timeout: 60
-      name: 'Maneuver'
+    -maneuver:
+        name: 'Maneuver'
 
-  -bins:
-      timeout: 60
-      name: 'Bins'
+    -bins:
+        name: 'Bins'
 
+    -torpedo:
+        name: 'Torpedo'
 
+    -octagon:
+        name: 'Octagon'
 
-  -torpedo:
-      timeout: 60
-      name: 'Torpedo'
-
-  -octagon:
-         name: 'Octagon'
-         timeout: 60
-
-  -square:
-      name: 'Square'
+    -square:
+        name: 'Square'

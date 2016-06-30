@@ -1,12 +1,9 @@
 cmake_minimum_required(VERSION 2.8.3)
 project(planner)
 
-## Find catkin macros and libraries
-## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
-## is used, also find other catkin packages
 find_package(catkin REQUIRED rospy  genmsg std_msgs geometry_msgs actionlib actionlib_msgs)
 
-## System dependencies are found with CMake's conventions
+
 find_package(catkin REQUIRED COMPONENTS rospy genmsg std_msgs geometry_msgs actionlib actionlib_msgs)
 
 
@@ -57,9 +54,6 @@ catkin_python_setup()
  add_action_files(
    DIRECTORY action
    FILES
-   initialize.action
-   move.action
-   octogon.action
    task.action
  )
 

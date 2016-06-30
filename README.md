@@ -2,18 +2,23 @@ McGill Robotics Planner
 =======================
 How to run the programs:
 
-Run them, then in another tab, use rostopic pub /sm_reset std_msgs/Bool True                
+From inside planner(roscd planner), roslaunch launch/planner.launch, then in another tab, use rostopic pub /sm_reset std_msgs/Bool True                
 (or False) , this simulates flipping the switch/button (True for Running, False/no signal for stopping/going back to idle).
 
 Issues:
 -The ctr+c preempt doesn't work even using the 'trick', so use ctrl+z and then
-kill -9 `jobs -ps` to remove all stopped processes if they start causing issues.
+kill -9 \`jobs -ps\` to remove all stopped processes if they start causing issues.
 
--Roslauch doesn't work (yaml file doesn't load automatically). Use
-rosparam load with the path to square.yaml (it's inside config) to get it on the param server,
-program works fine with the params once that is done.
+-The only thing preventing this from 100% working is a weird concurrency thing where it tries to return an invalid transition.
+It's as if it thinks the sequence inside the second monitor is also a monitor. Oddly enough, it spits a nasty looking error
+but the planner then goes on its merry way and runs seemingly just fine.
 
--The calculations for move don't mean anything.
+-I'm not sure the monitor preempts the actions quickly enough (potentially a big problem).Will try something with it.
+
+-Roslauch works for loading the params but it chokes on the previously mentioned concurrency problem. Launch the
+script directly (./scripts/planner_all) to see it better
+
+-yaml not loading in correct order, maybe params is indeed not the best way to load it. Will try how Jana loaded it.
 
 Quick wiki:
 
@@ -26,4 +31,4 @@ transitions. All the states here are inside what is called concurrence conataine
 the kill switch to reset the robot back into idle mode.
 
 To generate the states, you need parameters from the param server, which are currently sent
-from a yaml file. The challenge now is the possibility of having to generate parameters for a state on the fly.
+from a yaml file. Current challenge is fixing the weird concurrency issue.
