@@ -1,26 +1,17 @@
 tasks:
 
-    -initialize:
-      name: 'Initialize'
+  - {name: 'initialize'}
 
-    -gate:
-        name: 'Gate'
+  - {name: 'gate'}
 
-    -buoys:
-        name: 'Buoys'
+  - {name: 'buoy'}
 
+  - {name: 'maneuver'}
 
-    -maneuver:
-        name: 'Maneuver'
+  - {name: 'bin'}
 
-    -bins:
-        name: 'Bins'
+  - {name: 'torpedo'}
 
-    -torpedo:
-        name: 'Torpedo'
+  - {name: 'octagon'}
 
-    -octagon:
-        name: 'Octagon'
-
-    -square:
-        name: 'Square'
+  - {name: 'square'}

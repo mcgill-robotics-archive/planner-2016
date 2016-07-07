@@ -2,17 +2,37 @@
 import smach
 import smach_ros
 import rospy
+import yaml
+import taskr
 from threading import Thread
-from planner import *
-from planner.msg import taskGoal, taskAction
+#from planner import *
+from planner.msg import TaskGoal, TaskAction
 from smach_ros import SimpleActionState
 
 from actionlib import *
 from actionlib_msgs.msg import *
 from std_msgs.msg import Bool
-from geometry_msgs.msg import *
+#from src import Task
 
-import task_server
+class Act(smach.State):
+    def __init__(self, task_name):
+        smach.State.__init__(self,
+                             outcomes = ['succeeded', 'preempted'])
+        self.task_name = task_name
+    def execute(self, userdata):
+        client = SimpleActionClient(self.task_name + "_task", TaskAction)
+        if self.preempt_requested():
+                 self.service_preempt()
+                 return 'preempted'
+        client.wait_for_server()
+        goal = TaskGoal(task=self.task_name)
+        client.send_goal(goal)
+        client.wait_for_result()
+        rospy.loginfo(client.get_result())
+        if client.get_result().success:
+            return 'succeeded'
+        else:
+            return 'preempted'
 
 '''This stops everything (set back to idle) when  the kill switch triggers'''
 
@@ -56,21 +76,22 @@ def out_task_cb(outcome_map):
 
 
 def create_machine():
-
     static_sm = smach.StateMachine(outcomes=['succeeded', 'preempted', 'aborted'])
+
+    with open(yaml.load('/home/tortue/auv/catkin_ws/src/planner/config/combinedtasks.yaml')) as f:
+        task_list = yaml.load(f)
+        rospy.loginfo(task_list['tasks'])
 
     seq = smach.Sequence(
                     outcomes=['succeeded', 'preempted', 'aborted'],
                     connector_outcome='succeeded')
 
     with seq:
-        task_list = rospy.get_param('~/tasks')
-        for tasks in task_list:
-            task_name = tasks[1:]
-            rospy.loginfo(task_name)
-            smach.Sequence.add(task_name, SimpleActionState('task_action',
-                                                            taskAction,
-                                                            goal=taskGoal(name=task_name)))
+        for tasks in range(len(task_list['tasks'])):
+            rospy.loginfo(tasks)
+            task_name = task_list['tasks'][tasks]['name']
+            print(task_name)
+            smach.Sequence.add(task_name + '_task', Act(task_name))
 
     execution_concurrence = smach.Concurrence(outcomes=['succeeded','preempted','aborted'],
                                               default_outcome='succeeded',
@@ -96,28 +117,22 @@ def create_machine():
                                             'valid': 'Idle'})
 
         smach.StateMachine.add('Movement', execution_concurrence, transitions={'succeeded':'Idle',
-                                                                               'preempted':'Idle',
-                                                                               'aborted':'Idle'})
+                                                                               'preempted':'Idle'})
 
     return static_sm
 
 
 if __name__ == '__main__':
 
-    rospy.init_node('square_state_machine')
-    server = task_server.TaskAction('task_action')
+    rospy.init_node('fake_planner_client')
+    #server = task_server.TaskAction('task_action')
+
 
     sm = create_machine()
 
-    sis = smach_ros.IntrospectionServer('square_state_machine', sm, '/SM_ROOT')
-    sis.start  #taken from the threading method used in auv-2015 to avoid problems
-    smach_thread = Thread(target=lambda: sm.execute())
-    smach_thread.start()
+  #taken from the threading method used in auv-2015 to avoid problems
 
     #taken from auv-2015 to avoid the ctrl+c issue
-    rospy.on_shutdown(sm.request_preempt)
+
     sm.execute()
     rospy.spin()
-
-    smach_thread.join()
-    sis.stop()

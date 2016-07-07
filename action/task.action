@@ -1,8 +1,0 @@
-#goal
-string name
----
-#result
-bool success
----
-#feedback
-int64 info
