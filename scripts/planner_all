@@ -14,31 +14,63 @@ from actionlib_msgs.msg import *
 from std_msgs.msg import Bool
 #from src import Task
 
+
+res = 'succeeded'
+
 class Act(smach.State):
     def __init__(self, task_name):
         smach.State.__init__(self,
                              outcomes = ['succeeded', 'preempted'])
         self.task_name = task_name
+        self.res = 'succeeded'
+
+
+    def doneCb(self, status, result):
+        print('Done!')
+        if status == GoalStatus.SUCCEEDED:
+            self.res = 'succeeded'
+        else:
+            self.res =  'preempted'
+
+    def activeCb(self):
+        print('Active!')
+
+    def feedbackCb(self, feedback2):
+        if self.preempt_requested():
+                rospy.loginfo('Cancel')
+                client.cancel_goal()
+                client.service_preempt()
+                self.res = 'preempted'
+
     def execute(self, userdata):
         client = SimpleActionClient(self.task_name + "_task", TaskAction)
-        if self.preempt_requested():
-                 self.service_preempt()
-                 return 'preempted'
         client.wait_for_server()
         goal = TaskGoal(task=self.task_name)
+        #client.send_goal(goal, self.doneCb, self.activeCb, self.feedbackCb)
         client.send_goal(goal)
-        client.wait_for_result()
-        rospy.loginfo(client.get_result())
-        if client.get_result().success:
-            return 'succeeded'
-        else:
-            return 'preempted'
+        #client.wait_for_result()
+        while not rospy.is_shutdown():
+            if self.preempt_requested():
+                rospy.loginfo('Cancel')
+                client.cancel_all_goals()
+                client.service_preempt()
+                self.res = 'preempted'
+                break
+            if client.simple_state == SimpleGoalState.DONE:
+                break
+
+
+
+        #self.res = done_cb
+        return self.res
+
 
 '''This stops everything (set back to idle) when  the kill switch triggers'''
 
 
 def instastopper2(outcome_map):
     if outcome_map['Monitor'] == 'invalid' or outcome_map['Movement'] == 'succeeded' or outcome_map['Movement']=='preempted' or outcome_map['Movement'] == 'aborted':
+        rospy.loginfo('Monitor')
         return True
     return False
 
@@ -76,11 +108,15 @@ def out_task_cb(outcome_map):
 
 
 def create_machine():
+
+
+
     static_sm = smach.StateMachine(outcomes=['succeeded', 'preempted', 'aborted'])
 
     with open(yaml.load('/home/tortue/auv/catkin_ws/src/planner/config/combinedtasks.yaml')) as f:
         task_list = yaml.load(f)
         rospy.loginfo(task_list['tasks'])
+
 
     seq = smach.Sequence(
                     outcomes=['succeeded', 'preempted', 'aborted'],
@@ -91,16 +127,24 @@ def create_machine():
             rospy.loginfo(tasks)
             task_name = task_list['tasks'][tasks]['name']
             print(task_name)
-            smach.Sequence.add(task_name + '_task', Act(task_name))
+            execution_concurrence = smach.Concurrence(outcomes=['succeeded','preempted','aborted'],
+                                                      default_outcome='succeeded',
+                                                      child_termination_cb=instastopper2,
+                                                      outcome_cb=out_task_cb)
+            with execution_concurrence:
+                smach.Concurrence.add('Movement', Act(task_name))
+                smach.Concurrence.add('Monitor', smach_ros.MonitorState("/sm_reset", Bool, monitor_cb_stop))
 
-    execution_concurrence = smach.Concurrence(outcomes=['succeeded','preempted','aborted'],
-                                              default_outcome='succeeded',
-                                              child_termination_cb=instastopper2,
-                                              outcome_cb=out_task_cb)
-    with execution_concurrence:
-        smach.Concurrence.add('Movement', seq)
+            smach.Sequence.add(task_name + '_task', execution_concurrence)
 
-        smach.Concurrence.add('Monitor', smach_ros.MonitorState("/sm_reset", Bool, monitor_cb_stop))
+    # execution_concurrence = smach.Concurrence(outcomes=['succeeded','preempted','aborted'],
+    #                                           default_outcome='succeeded',
+    #                                           child_termination_cb=instastopper2,
+    #                                           outcome_cb=out_task_cb)
+    # with execution_concurrence:
+    #     smach.Concurrence.add('Movement', seq)
+    #
+    #     smach.Concurrence.add('Monitor', smach_ros.MonitorState("/sm_reset", Bool, monitor_cb_stop))
 
     idle_concurrence = smach.Concurrence(outcomes=['valid', 'invalid'],
                                          default_outcome='valid',
@@ -116,7 +160,7 @@ def create_machine():
                                transitions={'invalid': 'Movement',
                                             'valid': 'Idle'})
 
-        smach.StateMachine.add('Movement', execution_concurrence, transitions={'succeeded':'Idle',
+        smach.StateMachine.add('Movement', seq, transitions={'succeeded':'Idle',
                                                                                'preempted':'Idle'})
 
     return static_sm
