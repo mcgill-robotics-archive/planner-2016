@@ -6,7 +6,7 @@ import yaml
 import taskr
 import threading
 #from planner import *
-from planner.msg import TaskGoal, TaskAction
+from planner.msg import TaskAction, TaskAction
 from smach_ros import SimpleActionState
 
 from actionlib import *

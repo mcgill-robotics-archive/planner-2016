@@ -1,0 +1,8 @@
+tasks:
+  - name: initialize_task
+  - name: gate_task
+  - name: buoy_task
+  - name: maneuver_task
+  - name: bin_task
+  - name: torpedo_task
+  - name: octagon_task
