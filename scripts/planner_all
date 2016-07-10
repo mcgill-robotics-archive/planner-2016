@@ -4,7 +4,7 @@ import smach_ros
 import rospy
 import yaml
 import taskr
-from threading import Thread
+import threading
 #from planner import *
 from planner.msg import TaskGoal, TaskAction
 from smach_ros import SimpleActionState
@@ -12,6 +12,7 @@ from smach_ros import SimpleActionState
 from actionlib import *
 from actionlib_msgs.msg import *
 from std_msgs.msg import Bool
+from multiprocessing.pool import ThreadPool
 #from src import Task
 
 
@@ -22,47 +23,47 @@ class Act(smach.State):
         smach.State.__init__(self,
                              outcomes = ['succeeded', 'preempted'])
         self.task_name = task_name
-        self.res = 'succeeded'
+        self.client = SimpleActionClient(self.task_name + "_task", TaskAction)
 
 
-    def doneCb(self, status, result):
-        print('Done!')
-        if status == GoalStatus.SUCCEEDED:
-            self.res = 'succeeded'
-        else:
-            self.res =  'preempted'
-
-    def activeCb(self):
-        print('Active!')
-
-    def feedbackCb(self, feedback2):
-        if self.preempt_requested():
-                rospy.loginfo('Cancel')
-                client.cancel_goal()
-                client.service_preempt()
-                self.res = 'preempted'
+    # def doneCb(self, status, result):
+    #     print('Done!')
+    #     if status == GoalStatus.SUCCEEDED:
+    #         self.res = 'succeeded'
+    #     else:
+    #         self.res =  'preempted'
+    #
+    # def activeCb(self):
+    #     print('Active!')
+    #
+    # def feedbackCb(self, feedback2):
+    #     if self.preempt_requested():
+    #             rospy.loginfo('Cancel')
+    #             client.cancel_goal()
+    #             client.service_preempt()
+    #             self.res = 'preempted'
 
     def execute(self, userdata):
-        client = SimpleActionClient(self.task_name + "_task", TaskAction)
-        client.wait_for_server()
+
+        self.client.wait_for_server()
         goal = TaskGoal(task=self.task_name)
         #client.send_goal(goal, self.doneCb, self.activeCb, self.feedbackCb)
-        client.send_goal(goal)
+        self.client.send_goal(goal)
         #client.wait_for_result()
-        while not rospy.is_shutdown():
+        while not (self._goal_status == 2 or self._goal_status == 3 or self._goal_status == 4):
+            print(self._goal_status)
             if self.preempt_requested():
                 rospy.loginfo('Cancel')
-                client.cancel_all_goals()
-                client.service_preempt()
-                self.res = 'preempted'
-                break
-            if client.simple_state == SimpleGoalState.DONE:
-                break
+                self.client.cancel_goal()
+                return 'preempted'
+
+            # if self.client.simple_state == SimpleGoalState.DONE:
+            #     break
 
 
 
         #self.res = done_cb
-        return self.res
+        return 'succeeded'
 
 
 '''This stops everything (set back to idle) when  the kill switch triggers'''
@@ -70,7 +71,7 @@ class Act(smach.State):
 
 def instastopper2(outcome_map):
     if outcome_map['Monitor'] == 'invalid' or outcome_map['Movement'] == 'succeeded' or outcome_map['Movement']=='preempted' or outcome_map['Movement'] == 'aborted':
-        rospy.loginfo('Monitor')
+        #rospy.loginfo('Monitor')
         return True
     return False
 
@@ -103,8 +104,10 @@ def out_idle_cb(outcome_map):
 
 
 def out_task_cb(outcome_map):
-    rospy.sleep(3.5)
-    return 'succeeded'
+    if outcome_map['Movement'] == 'succeeded':
+        return 'succeeded'
+    else:
+        return 'preempted'
 
 
 def create_machine():
@@ -115,7 +118,7 @@ def create_machine():
 
     with open(yaml.load('/home/tortue/auv/catkin_ws/src/planner/config/combinedtasks.yaml')) as f:
         task_list = yaml.load(f)
-        rospy.loginfo(task_list['tasks'])
+        #rospy.loginfo(task_list['tasks'])
 
 
     seq = smach.Sequence(
@@ -124,7 +127,7 @@ def create_machine():
 
     with seq:
         for tasks in range(len(task_list['tasks'])):
-            rospy.loginfo(tasks)
+            #rospy.loginfo(tasks)
             task_name = task_list['tasks'][tasks]['name']
             print(task_name)
             execution_concurrence = smach.Concurrence(outcomes=['succeeded','preempted','aborted'],
@@ -178,5 +181,9 @@ if __name__ == '__main__':
 
     #taken from auv-2015 to avoid the ctrl+c issue
 
-    sm.execute()
+    pool = ThreadPool(processes=1)
+    async_result = pool.apply_async(sm.execute)
+
+    #sm.execute()
     rospy.spin()
+    async_result.get()
