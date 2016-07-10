@@ -50,8 +50,8 @@ class Act(smach.State):
         #client.send_goal(goal, self.doneCb, self.activeCb, self.feedbackCb)
         self.client.send_goal(goal)
         #client.wait_for_result()
-        while not (self._goal_status == 2 or self._goal_status == 3 or self._goal_status == 4):
-            print(self._goal_status)
+        while not (self.client.get_state() == 2 or self.client.get_state() == 3 or self.client.get_state() == 4):
+            #print(self._goal_status)
             if self.preempt_requested():
                 rospy.loginfo('Cancel')
                 self.client.cancel_goal()
