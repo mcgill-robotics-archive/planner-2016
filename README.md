@@ -1,34 +1,26 @@
-McGill Robotics Planner
-=======================
-How to run the programs:
+# McGill Robotics Planner
 
-From inside planner(roscd planner), roslaunch launch/planner.launch, then in another tab, use rostopic pub /sm_reset std_msgs/Bool True                
-(or False) , this simulates flipping the switch/button (True for Running, False/no signal for stopping/going back to idle).
+## To run
 
-Issues:
--The ctr+c preempt doesn't work even using the 'trick', so use ctrl+z and then
-kill -9 \`jobs -ps\` to remove all stopped processes if they start causing issues.
+```bash
+roslaunch planner planner.launch
+```
 
--The only thing preventing this from 100% working is a weird concurrency thing where it tries to return an invalid transition.
-It's as if it thinks the sequence inside the second monitor is also a monitor. Oddly enough, it spits a nasty looking error
-but the planner then goes on its merry way and runs seemingly just fine.
+## Mission switch
 
--I'm not sure the monitor preempts the actions quickly enough (potentially a big problem).Will try something with it.
+The main planner state machine responsible for executing tasks will begin once
+the mission switch is activated, or, equivalently, run:
 
--Roslauch works for loading the params but it chokes on the previously mentioned concurrency problem. Launch the
-script directly (./scripts/planner_all) to see it better
+```bash
+rostopic pub -1 /mission std_msgs/Bool "data: true"
+```
 
--yaml not loading in correct order, maybe params is indeed not the best way to load it. Will try how Jana loaded it.
+To abort the planner state machine, kill the robot or, equivalently, run:
 
-Quick wiki:
+```bash
+rostopic pub -1 /mission std_msgs/Bool "data: false"
+```
 
-The planner uses ActionStates to send goals and receive responses to and from taskr action servers
-(and potentially other kinds of services could be done through service states too).
-An action state is an action client in the form of a smach state.
+## Run dependencies
 
-A smach state is created with information about it and linked to other states through
-transitions. All the states here are inside what is called concurrence conatainers, which monitor
-the kill switch to reset the robot back into idle mode.
-
-To generate the states, you need parameters from the param server, which are currently sent
-from a yaml file. Current challenge is fixing the weird concurrency issue.
+The servers listed in the given YAML must be active. For AUV, run Taskr.
